@@ -2,7 +2,7 @@
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;*                                                                                 *
 ;*      SUPERMON 816 MACHINE LANGUAGE MONITOR FOR THE W65C816S MICROPROCESSOR      *
-;* ——————————————————————————————————————————————————————————————————————————————— *
+;* =============================================================================== *
 ;*      Copyright ©1991-2023 by BCS Technology Limited.  All rights reserved.      *
 ;*                                                                                 *
 ;* Redistribution & use of this software in source and/or binary forms, with or    *
@@ -21,8 +21,8 @@
 ;*    permission to do so has been granted by the copyright holder.                *
 ;*                                                                                 *
 ;* DISCLAIMER                                                                      *
-;* ——————————                                                                      *
-;* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS & CONTRIBUTORS “AS IS”.  Any *
+;* ==========                                                                      *
+;* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS & CONTRIBUTORS "AS IS".  Any *
 ;* express or implied warranties, including, but not limited to, the implied war-  *
 ;* ranties of merchantability & fitness for a particular purpose are disclaimed.   *
 ;* In no event shall the copyright owner and/or contributors be liable for any     *
@@ -36,7 +36,9 @@
 ;* If any provision set forth herein is not acceptable to you, DO NOT USE THIS     *
 ;* SOFTWARE & immediately delete it & all accompanying documentation from your     *
 ;* system.                                                                         *
-;* ——————————————————————————————————————————————————————————————————————————————— *
+;*                                                                                 *
+;* =============================================================================== *
+;*                                                                                 *
 ;* Supermon 816 is a salute to Jim Butterfield (1936-2007).                        *
 ;*                                                                                 *
 ;* Jim, who was the unofficial  spokesman for  Commodore  International during the *  
@@ -54,21 +56,23 @@
 ;* Kowalski simulator, version 1.3.4.  The latest version of the simulator can be  *
 ;* downloaded at https://rictor.org/sbc/kowalski.html (scroll to the bottom of the *
 ;* page for the download).  The simulator runs on Microsoft Windows only.          *
-;* ——————————————————————————————————————————————————————————————————————————————— *
+;*                                                                                 *
+;* =============================================================================== *
+;*                                                                                 *
 ;* Supermon 816 is a full featured machine language monitor.  It can:              *
 ;*                                                                                 *
-;*     A — Assemble code.                                                          *
-;*     C — Compare memory regions.                                                 *
-;*     D — Disassemble code.                                                       *
-;*     F — Fill memory region (fill cannot span banks in this version).            *
-;*     G — Execute code (stops at BRK).                                            *
-;*     H — Search (hunt) memory.                                                   *
-;*     J — Execute code as a subroutine (stops at BRK or RTS).                     *
-;*     M — Dump & display memory range.                                            *
-;*     R — Dump & display 65C816 registers.                                        *
-;*     T — Copy (transfer) memory region.                                          *
-;*     > — Modify (“poke”) memory.                                                 *
-;*     ; — Modify 65C816 registers.                                                *
+;*     A : Assemble code.                                                          *
+;*     C : Compare memory regions.                                                 *
+;*     D : Disassemble code.                                                       *
+;*     F : Fill memory region (fill cannot span banks in this version).            *
+;*     G : Execute code (stops at BRK).                                            *
+;*     H : Search (hunt) memory.                                                   *
+;*     J : Execute code as a subroutine (stops at BRK or RTS).                     *
+;*     M : Dump & display memory range.                                            *
+;*     R : Dump & display 65C816 registers.                                        *
+;*     T : Copy (transfer) memory region.                                          *
+;*     > : Modify ("poke") memory.                                                 *
+;*     ; : Modify 65C816 registers.                                                *
 ;*                                                                                 *
 ;* Supermon 816 accepts binary (%), octal (@), decimal (+) and hexadecimal ($) as  *
 ;* input for numeric parameters.  Additionally, the H and > operations accept an   *
@@ -118,10 +122,12 @@
 ;* is implied.                                                                     *
 ;*                                                                                 *
 ;* Type X at the Supermon 816 prompt to exit to the operating environment.         *
-;* ——————————————————————————————————————————————————————————————————————————————— *
+;*                                                                                 *
+;* =============================================================================== *
 ;*                                                                                 *
 ;* Notes on Instruction Syntax                                                     *
-;* ———————————————————————————                                                     *
+;* ===========================                                                     *
+;*                                                                                 *
 ;* The Eyes and Lichty programming manual uses the following syntax for the PEA    *
 ;* and PEI instructions:                                                           *
 ;*                                                                                 *
@@ -159,7 +165,7 @@
 ;* value, other than to verify it is 8 bits.                                       *
 ;*                                                                                 *
 ;* Although the official WDC assembly language syntax for the jump (JMP) instruc-  *
-;* tion allows use of a “long” (24-bit) address, Supermon 816 doesn't support that *
+;* tion allows use of a "long" (24-bit) address, Supermon 816 doesn't support that *
 ;* addressing mode.  Use JML instead.  JML's operand will always be assembled as a *
 ;* 24-bit address.  JMP's operand will always be treated as a 16-bit address.  An  *
 ;* attempt to assemble JMP with a 24-bit address will cause an error.              *
@@ -181,7 +187,7 @@ softvers .macro
 ;REVISION TABLE
 ;
 ;Ver  Rev Date    Description
-;———————————————————————————————————————————————————————————————————————————————
+;================================================================================
 ;1.1  2015/07/31  A) Added code to accept Motorola S-record loads.  This version
 ;                    continues with the VT-100 console driver.
 ;
@@ -198,9 +204,9 @@ softvers .macro
 ;     2023/08/14  A) Corrected an inadvertent coding error in the GETBYTE sub-
 ;                    routine.
 ;
-;     2024/06/18  A) Revision ‘3r’: S-record loader removed to reduce footprint
+;     2024/06/18  A) Revision 3r: S-record loader removed to reduce footprint
 ;                    to less than 4KB.
-;———
+;===
 ;1.0  2013/11/01  A) Original derived from the POC V1.1 single-board computer
 ;                    firmware.
 ;
@@ -214,11 +220,11 @@ softvers .macro
 ;                 B) Expanded the program notes.
 ;
 ;     2014/06/08  A) Special version with VT-100 support.
-;———————————————————————————————————————————————————————————————————————————————
+;================================================================================
 ;
 ;
 ;	COMMENT ABBREVIATIONS
-;	—————————————————————————————————————
+;	========================================================================
 ;	BCD   binary-coded decimal
 ;	 DP   direct page or page zero
 ;	EOF   end-of-field
@@ -234,11 +240,11 @@ softvers .macro
 ;	MSW   most-significant word
 ;	RAM   random access memory
 ;	 WS   whitespace, i.e., blanks & tabs
-;	—————————————————————————————————————
+;	========================================================================
 ;	A word is defined as 16 bits.
 ;
 ;	MPU REGISTER SYMBOLS
-;	———————————————————————
+;	====================
 ;	.A   accumulator LSB
 ;	.B   accumulator MSB
 ;	.C   16 bit accumulator
@@ -250,10 +256,10 @@ softvers .macro
 ;	PC   program counter
 ;	SP   stack pointer
 ;	SR   MPU status
-;	———————————————————————
+;	========================================================================
 ;
 ;	MPU STATUS REGISTER SYMBOLS
-;	———————————————————————————
+;	========================================================================
 ;	C   carry
 ;	D   decimal mode
 ;	I   maskable interrupts
@@ -262,34 +268,34 @@ softvers .macro
 ;	V   sign overflow
 ;	x   index registers size
 ;	Z   result zero
-;	———————————————————————————
+;	========================================================================
 ;
 ;===============================================================================
 ;
 ;SYSTEM INTERFACE DEFINITIONS
 ;
-;	——————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;	This section defines the interface between Supermon 816 & the host
 ;	system.   Change these definitions to suit your system, but do not
 ;	change any label names.  All definitions must have valid values in
 ;	order to assemble & run Supermon 816.
-;	——————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————
+;	=======================================================================
 _origin_ =$008000              ;assembly address...
 ;
 ;	Set _ORIGIN_ to Supermon 816's desired assembly address.
-;	————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 vecexit  =$00ffff              ;exit to environment address...
 ;
 ;	Set VECEXIT to where Supermon 816 should go when it exits.  Supermon 816
 ;	will do a JML (long jump) to this address, which means VECEXIT must be a
 ;	24 bit address.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 vecbrki  =$0000                ;BRK handler indirect vector...
 ;
 ;	Supermon 816 will modify this vector so that execution of a BRK instruc-
@@ -312,9 +318,9 @@ vecbrki  =$0000                ;BRK handler indirect vector...
 ;	If your BRK front end doesn't conform to the above you will have to mod-
 ;	ify Supermon 816 to accommodate the differences.  The most likely needed
 ;	changes will be in the order in which registers are pushed to the stack.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 hwstack  =$00ffff              ;top of hardware stack...
 ;
 ;	Supermon 816 initializes the stack pointer to this address when the cold
@@ -322,17 +328,17 @@ hwstack  =$00ffff              ;top of hardware stack...
 ;	undisturbed when entry into Supermon 816 is through JMONBRK.
 ;
 ;	JMON & JMONBRK are defined in the Supermon 816's jump table.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 zeropage =$00                  ;Supermon 816's direct page...
 ;
 ;	Supermon 816 uses direct page starting at this address.  Be sure that no
 ;	conflict occurs with other software, as an overwrite of any of these
 ;	locations may be fatal to Supermon 816.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 getcha   =$00ffff              ;get datum from TIA-232 channel A...
 
 ;	GETCHA refers to an operating system API call that returns a datum in
@@ -344,9 +350,9 @@ getcha   =$00ffff              ;get datum from TIA-232 channel A...
 ;	Supermon 816 expects .X & .Y to be preserved upon return from GETCHA.
 ;	You may have to modify Supermon 816 at all calls to GETCHA if your "get
 ;	datum" routine works differently than described.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 getchb   =$00ffff              ;get datum from TIA-232 channel B...
 ;
 ;	GETCHB refers to an operating system API call that returns a datum in
@@ -358,9 +364,9 @@ getchb   =$00ffff              ;get datum from TIA-232 channel B...
 ;	Supermon 816 expects .X & .Y to be preserved upon return from GETCHB.
 ;	You may have to modify Supermon 816 at all calls to GETCHB if your "get
 ;	datum" routine works differently than described.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 putcha   =$00ffff              ;print character on console...
 ;
 ;	PUTCHA refers to an operating system API call that prints a character to
@@ -372,9 +378,9 @@ putcha   =$00ffff              ;print character on console...
 ;	Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
 ;	You may have to modify Supermon 816 at all calls to PUTCHA if your "put
 ;	character" routine works differently than described.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 chanbctl =$00ffff              ;TIA-232 channel B control...
 ;
 ;	CHANBCTL refers to an operating system API call that enables or disables
@@ -382,9 +388,9 @@ chanbctl =$00ffff              ;TIA-232 channel B control...
 ;	get system's API then it will be necessary to comment out references to
 ;	it.  CHANBCTL is a BCS Technology Limited NXP driver feature.  Refer to
 ;	the function header comments for details.
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 stopkey  =$03                  ;display abort key...
 ;
 ;	Supermon 816 will poll for a "stop key" during display operations, such
@@ -394,17 +400,17 @@ stopkey  =$03                  ;display abort key...
 ;	call to GETCHA (described above).  The default STOPKEY definition of $03
 ;	is for ASCII <ETX> or [Ctrl-C].  An alternative definition could be $1B,
 ;	which is ASCII <ESC> or [ESC].
-;	————————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
 ibuffer  =$008000              ;input buffer &...
 auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;
-;	———————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;	Supermon 816 will use the above definitions for workspace in various
 ;	ways.  These buffers may be located anywhere in RAM that is convenient.
 ;	The buffers are stateless, which means that unless Supermon 816 has
 ;	control of your system they may be overwritten without consequence.
-;	———————————————————————————————————————————————————————————————————————
+;	=======================================================================
 ;
 ;===============================================================================
 ;
@@ -477,17 +483,17 @@ sr_neg   =sr_ovl << 1          ;N
 ;	NVmxDIZC
 ;	xxxxxxxx
 ;	||||||||
-;	|||||||+———> 1 = carry set/generated
-;	||||||+————> 1 = result = zero
-;	|||||+—————> 1 = IRQs ignored
-;	||||+——————> 0 = binary arithmetic mode
+;	|||||||+---> 1 = carry set/generated
+;	||||||+----> 1 = result = zero
+;	|||||+-----> 1 = IRQs ignored
+;	||||+------> 0 = binary arithmetic mode
 ;	||||         1 = decimal arithmetic mode
-;	|||+———————> 0 = 16 bit index
+;	|||+-------> 0 = 16 bit index
 ;	|||          1 = 8 bit index
-;	||+————————> 0 = 16 bit .A & memory
+;	||+--------> 0 = 16 bit .A & memory
 ;	||           1 = 8 bit .A & memory
-;	|+—————————> 1 = sign overflow
-;	+——————————> 1 = result = negative
+;	|+---------> 1 = sign overflow
+;	+----------> 1 = result = negative
 ;
 ;
 ;	register size masks (used with REP & SEP)...
@@ -854,17 +860,17 @@ flimflag =eopsize+s_byte       ;forced long immediate...
 ;
 ;	xx000000
 ;	||
-;	|+—————————> 0: .X/.Y = 8 bits
+;	|+---------> 0: .X/.Y = 8 bits
 ;	|            1: .X/.Y = 18 bits
-;	+——————————> 0: .A = 8 bits
+;	+----------> 0: .A = 8 bits
 ;	             1: .A = 16 bits
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	----------------------------------------------------------------------------
 ;	During assembly, FLIMFLAG indicates the operand size used with an immed-
 ;	iate mode instruction, thus causing the following disassembly to display
 ;	the assembled  operand size.   During disassembly,  FLIMFLAG will mirror
 ;	the effect of the most recent REP or SEP instruction.
-;	————————————————————————————————————————————————————————————————————————
+;	----------------------------------------------------------------------------
 ;
 iopsize  =flimflag+s_byte      ;operand size
 range    =iopsize+s_byte       ;allowable radix range
@@ -881,12 +887,12 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;
 ;VT-100 CONSOLE DISPLAY CONTROL MACROS
 ;
-;	———————————————————————————————————————————————————————————————————————
+;	----------------------------------------------------------------------------
 ;	The following macros execute terminal control procedures that perform
 ;	such tasks as clearing the screen,  switching between  normal & reverse
 ;	video, etc.  These macros are for VT-100 & compatible displays.  Only
 ;	the functions needed by Supermon 816 are included.
-;	———————————————————————————————————————————————————————————————————————
+;	----------------------------------------------------------------------------
 ;
 _csi_    .macro                ;Control Sequence Introducer
          .byte a_esc, "["
@@ -985,11 +991,11 @@ mon      rep #m_seta           ;16-bit .A
          lda !#hwstack         ;top of hardware stack
          tcs                   ;set SP...
 ;
-;			—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-
+;			-------------------------------------------------------
 ;			The stack pointer initialization is an optional step
 ;			that could be removed if Supermon 816 is made part
 ;			of system firware.
-;			—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-
+;			-------------------------------------------------------
 ;
          tdc                   ;get & save DP...
          sta reg_dpx           ;into shadow register
@@ -1012,22 +1018,22 @@ mon      rep #m_seta           ;16-bit .A
 ;
 ;monbrk: SOFTWARE INTERRUPT INTERCEPT
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	------------------------------------------------------------------------
 ;	This is the entry point taken when a BRK instruction is executed.  It is
 ;	assumed that the BRK  handler has pushed the registers to the stack that
 ;	are not automatically pushed by the MPU in response to BRK.  See the
 ;	documentation for what Supermon 816 expects to find on the stack follow-
 ;	ing a BRK.
-;	————————————————————————————————————————————————————————————————————————
+;	------------------------------------------------------------------------
 ;
 monbrk   ;pea #localdp          ;operating environment's direct page
          ;pld                   ;set it...
 ;
-;	——————————————————————————————————————————————————————————————————————
+;	------------------------------------------------------------------------
 ;	Uncomment the above instructions to set a definition for the monitor's
 ;	direct page location.  If left commented, the value in DP will be used
 ;	as is.
-;	——————————————————————————————————————————————————————————————————————
+;	------------------------------------------------------------------------
 ;         
          ply                   ;recover registers
          plx
@@ -1055,9 +1061,9 @@ monbrk   ;pea #localdp          ;operating environment's direct page
 ;
 ;moncom: COMMON ENTRY POINT
 ;
-;	——————————————————————————————————————
+;	------------------------------------------------------------------------
 ;	DO NOT directly call this entry point!
-;	——————————————————————————————————————
+;	------------------------------------------------------------------------
 ;
 moncom   jsr sprint            ;print heading
          rep #m_seta
@@ -1066,18 +1072,18 @@ moncom   jsr sprint            ;print heading
          rep #%11111111        ;clear SR &...
          sep #srinit | sr_car  ;set default state...
 ;
-;			—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—
+;			-------------------------------------
 ;			The above implicitly sets carry.  See
 ;			next step for why carry must be set.
-;			—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—
+;			-------------------------------------
 ;
 ;===============================================================================
 ;
 ;monreg: DISPLAY MPU REGISTERS
 ;
-;	—————————
+;	---------	
 ;	syntax: R
-;	—————————
+;	---------
 ;
 monreg   bcs .0000010          ;okay to proceed
 ;
@@ -1194,13 +1200,13 @@ monerraa jsr dpyerr            ;indicate an error &...
 ;
 ;monasc: ASSEMBLE CODE
 ;
-;	———————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: A <addr> <mnemonic> [<argument>]
 ;
 ;	After a line of code has been successfully assembled it will be disass-
 ;	embled & displayed,  & the monitor will prompt with the next address to
 ;	which code may be assembled.
-;	———————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monasc   bcc .0000020          ;assembly address entered
 ;
@@ -1263,7 +1269,7 @@ monasc   bcc .0000020          ;assembly address entered
 ;
 ;
 ;	test for copy instruction...
-;	————————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	The MVN & MVP instructions accept two operands & hence have an irregular
 ;	syntax.  Therefore, special handling is necessary to assemble either of
 ;	these instructions.
@@ -1272,7 +1278,7 @@ monasc   bcc .0000020          ;assembly address entered
 ;	dresses as operands, with the assembler isolating bits 16-23 to use as
 ;	operands.  This formality has been dispensed with in this monitor & the
 ;	operands are expected to be 8 bit bank values.
-;	————————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
          rep #m_seta           ;16 bit load
          lda mnepck            ;packed menmonic
@@ -1413,11 +1419,11 @@ monasc07 txa                   ;convert index...
 ;
          bra monasc04          ;this shouldn't happen!
 ;
-;	—————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	If the mnemonic index table search fails then there is a coding error
 ;	somewhere, as every entry in the mnemonic table is supposed to have a
 ;	matching cardinal index.
-;	—————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 ;
 ;	evaluate addressing mode...
@@ -1577,9 +1583,9 @@ monasc10 jsr dpyerr            ;indicate error &...
 ;
 ;mondsc: DISASSEMBLE CODE
 ;
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: D [<addr1> [<addr2>]]
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 mondsc   bcs .0000010          ;no parameters
 ;
@@ -1631,12 +1637,12 @@ mondsc   bcs .0000010          ;no parameters
 ;
 ;monjmp: EXECUTE CODE
 ;
-;	—————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: G [<dp>]
 ;
 ;	If no address is specified, the current values in the PB & PC
 ;	shadow registers are used.
-;	—————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monjmp   jsr setxaddr          ;set execution address
          bcs monjmpab          ;out of range — error
@@ -1674,14 +1680,14 @@ monjmpab jmp monerr            ;error
 ;
 ;monjsr: EXECUTE CODE AS SUBROUTINE
 ;
-;	————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: J [<dp>]
 ;
 ;	If no address is specified the current values in the PB & PC
 ;	shadow registers are used.   An RTS at the end of the called
 ;	subroutine will return control to the monitor,  provided the
 ;	stack remains in balance.
-;	————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monjsr   jsr setxaddr          ;set execution address
          bcs monjmpab          ;out of range — error
@@ -1719,12 +1725,12 @@ monjsr   jsr setxaddr          ;set execution address
 ;
 ;monchm: CHANGE and/or DUMP MEMORY
 ;
-;	————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: > [<addr> <operand> [<operand>]...]
 ;
 ;	> <addr> without operands will dump 16 bytes
 ;	of memory, starting at <addr>.
-;	————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monchm   bcs .0000030          ;no address given — quit
 ;
@@ -1758,9 +1764,9 @@ monchm   bcs .0000030          ;no address given — quit
 ;
 ;moncmp: COMPARE MEMORY
 ;
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: C <start> <end> <ref>
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 moncmp   bcs .0000030          ;start not given — quit
 ;
@@ -1797,9 +1803,9 @@ moncmp   bcs .0000030          ;start not given — quit
 ;
 ;moncpy: COPY (transfer) MEMORY
 ;
-;	————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: T <start> <end> <target>
-;	————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 moncpy   bcs .0000040          ;start not given — quit
 ;
@@ -1858,9 +1864,9 @@ moncpy   bcs .0000040          ;start not given — quit
 ;
 ;mondmp: DISPLAY MEMORY RANGE
 ;
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: M [<addr1> [<addr2>]]
-;	—————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 mondmp   bcs .0000010          ;no parameters
 ;
@@ -1911,11 +1917,11 @@ mondmp   bcs .0000010          ;no parameters
 ;
 ;monfil: FILL MEMORY
 ;
-;	—————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: F <start> <end> <fill>
 ;
 ;	<start> & <end> must be in the same bank.
-;	—————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monfil   bcs .0000010          ;start not given — quit
 ;
@@ -1982,9 +1988,9 @@ monfil   bcs .0000010          ;start not given — quit
 ;
 ;monhnt: SEARCH (hunt) MEMORY
 ;
-;	———————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: H <addr1> <addr2> <pattern>
-;	———————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monhnt   bcs .0000050          ;no start address
 ;
@@ -2036,9 +2042,9 @@ monhnt   bcs .0000050          ;no start address
 ;
 ;monenv: CONVERT NUMERIC VALUE
 ;
-;	——————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: <radix><value>
-;	——————————————————————
+;	-----------------------------------------------------------------------
 ;
 monenv   jsr getparmr          ;reread & evaluate parameter
          bcs .0000020          ;none entered
@@ -2072,11 +2078,11 @@ monenv   jsr getparmr          ;reread & evaluate parameter
 ;
 ;monchr: CHANGE REGISTERS
 ;
-;	——————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	syntax: ; [PB [PC [.S [.C [.X [.Y [SP [DP [DB]]]]]]]]]
 ;
 ;	; with no parameters is the same as the R command.
-;	——————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 monchr   bcs .0000040          ;dump registers & quit
 ;
@@ -2119,9 +2125,9 @@ monchr   bcs .0000040          ;dump registers & quit
 ;
 ;monxit: EXIT TO OPERATING ENVIRONMENT
 ;
-;	—————————
+;	-----------------------------------------------------------------------
 ;	syntax: X
-;	—————————
+;	-----------------------------------------------------------------------
 ;
 monxit   bcc .0000020          ;no parameters allowed
 ;
@@ -2171,7 +2177,7 @@ dpycaddr ldx xrtemp            ;column count
 ;
 ;dpycod: DISASSEMBLE & DISPLAY CODE
 ;
-;	————————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	This function disassembles & displays the machine code at  the  location
 ;	pointed to by ADDRA.  Upon return, ADDRA will point to the opcode of the
 ;	next instruction.   The entry point at DPYCODAA  should be called with a
@@ -2185,16 +2191,16 @@ dpycaddr ldx xrtemp            ;column count
 ;
 ;	    FLIMFLAG: xx000000
 ;	              ||
-;	              |+—————————> 0:  8 bit .X or .Y operand
+;	              |+---------> 0:  8 bit .X or .Y operand
 ;	              |            1: 16 bit .X or .Y operand
-;	              +——————————> 0:  8 bit .A or BIT # operand
+;	              +----------> 0:  8 bit .A or BIT # operand
 ;	                           1: 16 bit .A or BIT # operand
 ;
 ;	FLIMFLAG is conditioned according to the operand of  the  most  recently
 ;	disassembled REP or SEP instruction.   Hence repetitive  calls  to  this
 ;	subroutine will usually result in the correct disassembly of 16 bit imm-
 ;	ediate mode instructions.
-;	————————————————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 dpycod   lda #disprfx          ;default prefix
 ;
@@ -2413,12 +2419,12 @@ dpyibuf  pea #ibuffer
 ;
 ;dpymem: DISPLAY MEMORY
 ;
-;	————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	This function displays 16 bytes of memory as hex values & as
 ;	ASCII equivalents.  The starting address for the display is
 ;	in ADDRA & is expected to be a 24 bit address.  Upon return,
 ;	ADDRA will point to the start of the next 16 bytes.
-;	————————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 dpymem   sep #m_setr
          stz charcnt           ;reset
@@ -2489,13 +2495,13 @@ prntladr php                   ;protect register sizes
 ;
 ;dpyhexw: DISPLAY BINARY WORD AS HEX ASCII
 ;
-;	————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: .C: word to display
 ;
 ;	Returned Values: .C: used
 ;	                 .X: used
 ;	                 .Y: entry value
-;	————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 dpyhexw  php                   ;save register sizes
          rep #m_seta
@@ -2512,13 +2518,13 @@ dpyhexw  php                   ;save register sizes
 ;
 ;dpyhex: DISPLAY BINARY BYTE AS HEX ASCII
 ;
-;	————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: .A: byte to display
 ;
 ;	Returned Values: .A: used
 ;	                 .X: used
 ;	                 .Y: entry value
-;	————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 dpyhex   jsr binhex            ;convert to hex ASCII
          jsr putcha            ;print MSN
@@ -2536,7 +2542,7 @@ dpypbr   lda reg_pbx           ;PB
 ;
 ;multspc: PRINT MULTIPLE BLANKS
 ;
-;	————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops : .X: number of blanks to print
 ;
 ;	Register Returns: none
@@ -2545,7 +2551,7 @@ dpypbr   lda reg_pbx           ;PB
 ;	                  jsr multspc    ;print 3 spaces
 ;
 ;	Notes: This sub will print 1 blank if .X=0.
-;	————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 multspc  txa
          bne .0000010          ;blank count specified
@@ -2595,7 +2601,7 @@ printcmn jmp putcha
 ;
 ;sprint: PRINT NULL-TERMINATED CHARACTER STRING
 ;
-;	—————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops : SP+1: string address LSB
 ;	                  SP+2: string address MSB
 ;
@@ -2606,12 +2612,12 @@ printcmn jmp putcha
 ;
 ;	MPU Flags: NVmxDIZC
 ;	           ||||||||
-;	           |||||||+———> 0: okay
+;	           |||||||+---> 0: okay
 ;	           |||||||      1: string too long (1)
-;	           ||||+++————> not defined
-;	           |||+———————> 1
-;	           ||+————————> 1
-;	           ++—————————> not defined
+;	           ||||+++----> not defined
+;	           |||+-------> 1
+;	           ||+--------> 1
+;	           ++---------> not defined
 ;
 ;	Example: PER STRING
 ;	         JSR SPRINT
@@ -2621,15 +2627,15 @@ printcmn jmp putcha
 ;	          terminator is 32,767 bytes.
 ;	       2) All registers are forced to 8 bits.
 ;	       3) DO NOT JUMP OR BRANCH INTO THIS FUNCTION!
-;	—————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 sprint   sep #m_seta           ;8 bit accumulator
          rep #m_setx           ;16 bit index
 ;
-;—————————————————————————————————————————————————————————
+;------------------------------------------------------------------------------
 .retaddr =1                    ;return address
 .src     =.retaddr+s_word      ;string address stack offset
-;—————————————————————————————————————————————————————————
+;------------------------------------------------------------------------------
 ;
          ldy !#0
          clc                   ;no initial error
@@ -2653,7 +2659,7 @@ sprint   sep #m_seta           ;8 bit accumulator
 ;
 ;ascbin: CONVERT NULL-TERMINATED ASCII NUMBER STRING TO BINARY
 ;
-;	———————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: ASCII number string in IBUFFER
 ;
 ;	Returned Values: FACA: converted parameter
@@ -2674,7 +2680,7 @@ sprint   sep #m_seta           ;8 bit accumulator
 ;
 ;	          Hex is the default if no radix is speci-
 ;	          fied in the 1st character of the string.
-;	———————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 ascbin   sep #m_setr
          jsr clrfaca           ;clear accumulator
@@ -2828,13 +2834,13 @@ ascbin04 sep #m_seta           ;reset if necessary
 ;
 ;bintonyb: EXTRACT BINARY NYBBLES
 ;
-;	—————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: .A: binary value
 ;
 ;	Returned Values: .A: MSN
 ;	                 .X: LSN
 ;	                 .Y: entry value
-;	—————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 bintonyb pha                   ;save
          and #bcdumask         ;extract LSN
@@ -2849,7 +2855,7 @@ bintonyb pha                   ;save
 ;
 ;binasc: CONVERT 32-BIT BINARY TO NULL-TERMINATED ASCII NUMBER STRING
 ;
-;	——————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: FACA: 32-bit operand
 ;	                   .A: radix character, w/bit 7 set to
 ;	                       suppress radix symbol in the
@@ -2861,7 +2867,7 @@ bintonyb pha                   ;save
 ;	                      .Y: string address MSB
 ;
 ;	Execution Notes: ibufidx & instsize are overwritten.
-;	——————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 binasc   stz ibufidx           ;initialize string index
          stz instsize          ;clear format flag
@@ -2985,13 +2991,13 @@ binasc   stz ibufidx           ;initialize string index
 ;
 ;binhex: CONVERT BINARY BYTE TO HEX ASCII CHARS
 ;
-;	————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: .A: byte to convert
 ;
 ;	Returned Values: .A: MSN ASCII char
 ;	                 .X: LSN ASCII char
 ;	                 .Y: entry value
-;	————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 binhex   jsr bintonyb          ;generate binary values
          pha                   ;save MSN
@@ -3190,7 +3196,7 @@ cpsup    pha                   ;save banks
 ;
 ;decdcnt: DECREMENT DUMP COUNT
 ;
-;	———————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: bytes to process in FACB
 ;	                 bytes processed in CHARCNT
 ;
@@ -3198,7 +3204,7 @@ cpsup    pha                   ;save banks
 ;	                 .X: entry value
 ;	                 .Y: entry value
 ;	                 .C: 1 = count = zero
-;	———————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 decdcnt  rep #m_seta
          lda facb+s_word       ;count MSW
@@ -3293,7 +3299,7 @@ facaoper ldx #s_oper-1
 ;
 ;facasize: REPORT OPERAND SIZE IN FACA
 ;
-;	——————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: operand in FACA
 ;
 ;	Returned Values: .A: s_byte  (1)
@@ -3303,7 +3309,7 @@ facaoper ldx #s_oper-1
 ;
 ;	Notes: 1) This function will always report
 ;	          a non-zero result.
-;	——————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 facasize sep #m_setr
          ldx #s_dword-1
@@ -3322,14 +3328,14 @@ facasize sep #m_setr
 ;
 ;getparm: GET A PARAMETER
 ;
-;	—————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: null-terminated input in IBUFFER
 ;
 ;	Returned Values: .A: chars in converted parameter
 ;	                 .X: used
 ;	                 .Y: entry value
 ;	                 .C: 1 = no parameter entered
-;	—————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 getparmr dec ibufidx           ;reread previous char
 ;
@@ -3369,7 +3375,7 @@ getparm  phy                   ;preserve
 ;
 ;nxtaddra: TEST & INCREMENT WORKING ADDRESS 'A'
 ;
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Calling syntax: JSR NXTADDRA
 ;
 ;	Exit registers: .A: used
@@ -3381,13 +3387,13 @@ getparm  phy                   ;preserve
 ;	                PB: entry value
 ;	                SR: NVmxDIZC
 ;	                    ||||||||
-;	                    |||||||+———> 0: ADDRA < ADDRB
+;	                    |||||||+---> 0: ADDRA < ADDRB
 ;	                    |||||||      1: ADDRA >= ADDRB
-;	                    ||||||+————> undefined
-;	                    |||+++—————> entry value
-;	                    ||+————————> 1
-;	                    ++—————————> undefined
-;	——————————————————————————————————————————————————
+;	                    ||||||+----> undefined
+;	                    |||+++-----> entry value
+;	                    ||+--------> 1
+;	                    ++---------> undefined
+;	-----------------------------------------------------------------------
 ;
 nxtaddra sep #m_seta
          lda addra+s_word      ;bits 16-23
@@ -3414,7 +3420,7 @@ getbyte  lda [addra]           ;get a byte
 ;
 ;incaddra: INCREMENT WORKING ADDRESS 'A'
 ;
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Calling syntax: JSR INCADDRA
 ;
 ;	Exit registers: .A: entry value
@@ -3427,7 +3433,7 @@ getbyte  lda [addra]           ;get a byte
 ;	                SR: NVmxDIZC
 ;	                    ||||||||
 ;	                    ++++++++———> entry value
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 incaddra php
          rep #m_seta
@@ -3463,13 +3469,13 @@ incoper  clc
 ;
 ;instdata: GET INSTRUCTION SIZE & ADDRESSING MODE DATA
 ;
-;	——————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: .X: 65C816 opcode
 ;
 ;	Returned Values: .A: mode flags
 ;	                 .X: operand size
 ;	                 .Y: mode index
-;	——————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 instdata sep #m_setr
          lda mnetabam,x        ;addressing mode data
@@ -3491,7 +3497,7 @@ instdata sep #m_setr
 ;
 ;offtarg: CONVERT BRANCH OFFSET TO TARGET ADDRESS
 ;
-;	———————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops:    ADDRA: base address
 ;	                 INSTSIZE: instruction size
 ;	                  OPERAND: offset
@@ -3500,7 +3506,7 @@ instdata sep #m_setr
 ;	                       .A: used
 ;	                       .X: entry value
 ;                              .Y: entry value
-;	———————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 offtarg  rep #m_seta
          lda addra             ;base address
@@ -3549,7 +3555,7 @@ setxaddr bcs .0000010          ;no address given
 ;
 ;targoff: CONVERT BRANCH TARGET ADDRESS TO BRANCH OFFSET                   
 ;
-;	—————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops:   ADDRA: instruction address
 ;	                 OPERAND: target address
 ;
@@ -3561,13 +3567,13 @@ setxaddr bcs .0000010          ;no address given
 ;
 ;	Execution notes: ADDRB is set to the branch base
 ;	                 address.
-;	—————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 targoff  ;this line intentionally has no code
 ;
-;—————————————————————————————————————————————————
+;-----------------------------------------------------------------------------
 .btype   =facc+5               ;branch type flag
-;—————————————————————————————————————————————————
+;-----------------------------------------------------------------------------
 ;
          lda instsize          ;instruction size will tell...
          lsr                   ;if long or short branch
@@ -3634,7 +3640,7 @@ getcharr dec ibufidx           ;move back a char
 ;
 ;getchar: GET A CHARACTER FROM INPUT BUFFER
 ;
-;	——————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops : none
 ;
 ;	Register Returns: .A: character or <NUL>
@@ -3644,15 +3650,15 @@ getcharr dec ibufidx           ;move back a char
 ;
 ;	MPU Flags: NVmxDIZC
 ;	           ||||||||
-;	           |||||||+———> entry value
-;	           ||||||+————> 1: <NUL> gotten
-;	           |||||+—————> entry value
-;	           ||||+——————> entry value
-;	           |||+———————> entry value
-;	           ||+————————> entry value
-;	           |+—————————> not defined
-;	           +——————————> not defined
-;	——————————————————————————————————————————————
+;	           |||||||+---> entry value
+;	           ||||||+----> 1: <NUL> gotten
+;	           |||||+-----> entry value
+;	           ||||+------> entry value
+;	           |||+-------> entry value
+;	           ||+--------> entry value
+;	           |+---------> not defined
+;	           +----------> not defined
+;	-----------------------------------------------------------------------
 ;
 getchar  phx
          phy
@@ -3672,7 +3678,7 @@ getchar  phx
 ;
 ;getpat: GET PATTERN FOR MEMORY CHANGE or SEARCH
 ;
-;	—————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: Null-terminated pattern in IBUFFER.
 ;
 ;	Returned Values: .A: used
@@ -3687,7 +3693,7 @@ getchar  phx
 ;	          characters are interpreted as ASCII.
 ;	       2) A maximum of 32 bytes or characters is
 ;	          accepted.  Excess input will be discarded.
-;	—————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 getpat   stz status            ;clear pattern type indicator
          ldy #0                ;pattern index
@@ -3753,7 +3759,7 @@ getpat   stz status            ;clear pattern type indicator
 ;
 ;getcharw: GET FROM INPUT BUFFER, DISCARDING WHITESPACE
 ;
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: Null-terminated input in IBUFFER.
 ;
 ;	Returned Values: .A: char or null
@@ -3763,7 +3769,7 @@ getpat   stz status            ;clear pattern type indicator
 ;
 ;	Notes: Whitespace is defined as a blank ($20) or a
 ;	       horizontal tab ($09).
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 getcharw jsr getchar           ;get from buffer
          beq .0000010          ;EOI
@@ -3781,7 +3787,7 @@ getcharw jsr getchar           ;get from buffer
 ;
 ;input: INTERACTIVE INPUT FROM CONSOLE CHANNEL
 ;
-;	———————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: Zero IBUFIDX or load IBUFFER with default
 ;	                 input & set IBUFIDX to the number of chars
 ;	                 loaded into the buffer.
@@ -3795,7 +3801,7 @@ getcharw jsr getchar           ;get from buffer
 ;
 ;	Notes: Input is collected in IBUFFER & is null-terminated.
 ;	       IBUFIDX is reset to zero upon exit.
-;	———————————————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 input    ldx ibufidx
          stz ibuffer,x         ;be sure buffer is terminated
@@ -3884,14 +3890,14 @@ lodbnk   sep #m_seta
 ;
 ;getcharc: GET A CHARACTER FROM INPUT BUFFER & CONVERT CASE
 ;
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: Null-terminated input in IBUFFER.
 ;
 ;	Returned Values: .A: char or null
 ;	                 .X: entry value
 ;	                 .Y: entry value
 ;	                 .Z: 1 = null terminator detected
-;	——————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 getcharc jsr getchar           ;get from buffer
 ;
@@ -3899,7 +3905,7 @@ getcharc jsr getchar           ;get from buffer
 ;
 ;toupper: FORCE CHARACTER TO UPPER CASE
 ;
-;	————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops : .A: 8 bit character to convert
 ;
 ;	Register Returns: .A: converted character
@@ -3911,7 +3917,7 @@ getcharc jsr getchar           ;get from buffer
 ;
 ;	Notes: 1) This subroutine has no effect on char-
 ;	          acters that are not alpha.
-;	————————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 toupper  php                   ;protect flags
          cmp #a_asclcl         ;check char range
@@ -3930,7 +3936,7 @@ touppera rts
 ;
 ;teststop: TEST FOR STOP KEY
 ;
-;	——————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	Preparatory Ops: none
 ;
 ;	Returned Values: .A: detected keypress, if any
@@ -3948,7 +3954,7 @@ touppera rts
 ;
 ;	Notes: The symbol STOPKEY defines the ASCII
 ;	       value of the "stop key."
-;	——————————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 teststop jsr getcha            ;poll console
          bcs .0000010          ;no input
@@ -3964,10 +3970,10 @@ teststop jsr getcha            ;poll console
 ;
 ;cpcode: COPY MEMORY CODE
 ;
-;	———————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;	This code is transfered to workspace when a
 ;	copy or fill operation is to be performed.
-;	———————————————————————————————————————————
+;	-----------------------------------------------------------------------
 ;
 cpcode   phb                   ;must preserve data bank
 	.rept s_mvinst
@@ -4426,8 +4432,8 @@ mnetabix .byte mne_brkx        ; $00  BRK
 ;
 ;	    xxxxxxxx
 ;	    ||||||||
-;	    ||||++++———> Addressing Mode
-;	    ||||         ——————————————————————————————————
+;	    ||||++++---> Addressing Mode
+;	    ||||         -------------------------------------------------
 ;	    ||||          0000  dp, abs, absl, implied or A
 ;	    ||||          0001  #
 ;	    ||||          0010  dp,X, abs,X or absl,X
@@ -4440,7 +4446,7 @@ mnetabix .byte mne_brkx        ; $00  BRK
 ;	    ||||          1001  <offset>,S
 ;	    ||||          1010  (<offset>,S),Y
 ;	    ||||          1011  sbnk,dbnk (MVN or MVP)
-;	    ||||          —-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—-—
+;	    ||||          ------------------------------------------------
 ;	    ||||           #    = immediate
 ;	    ||||           A    = accumulator
 ;	    ||||           abs  = absolute
@@ -4449,19 +4455,19 @@ mnetabix .byte mne_brkx        ; $00  BRK
 ;	    ||||           dp   = direct (zero) page
 ;	    ||||           S    = stack relative
 ;	    ||||           sbnk = source bank
-;	    ||||         ——————————————————————————————————
+;	    ||||          ------------------------------------------------
 ;	    ||||
-;	    ||++———————> binary-encoded operand size
-;	    |+—————————> 1: relative branch instruction
-;	    +——————————> 1: variable operand size...
+;	    ||++-------> binary-encoded operand size
+;	    |+---------> 1: relative branch instruction
+;	    +----------> 1: variable operand size...
 ;
-;	    —————————————————————————————————————————————————————————————
+;  	    ---------------------------------------------------------------
 ;	    Variable operand size refers to an immediate mode instruction
 ;	    that can accept either an 8 or 16-bit operand.  During instr-
 ;	    uction assembly, an 8-bit operand can be forced to 16 bits by
 ;	    preceding the operand field with !,  e.g.,  LDA !#$01,  which
 ;	    will assemble as $A9 $01 $00.
-;	    —————————————————————————————————————————————————————————————
+;  	    ---------------------------------------------------------------
 ;
 mnetabam .byte ops0 | am_nam   ; $00  BRK
          .byte ops1 | am_indx  ; $01  ORA (dp,X)
