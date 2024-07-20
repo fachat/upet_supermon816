@@ -832,7 +832,7 @@ srinit   =%00000000            ;SR initialization value
 ; when entering the monitor, the workspace is cleared
 ; from reg_pbx to vopsflag (vopsflag-reg_pbx bytes)
 ;
-	;.zero
+	.zero
 reg_pbx  .dsb s_mpupbx		;=zeropage             ;PB shadow
 reg_pcx  .dsb s_mpupcx		;=reg_pbx+s_mpupbx     ;PC shadow
 reg_srx  .dsb s_mpusrx		;=reg_pcx+s_mpupcx     ;SR shadow
@@ -846,17 +846,13 @@ reg_dbx  .dsb s_mpudbx		;=reg_dpx+s_mpudpx     ;DB shadow
 ;
 ;	general workspace...
 ;
-	.zero
 addra    .dsb s_addr		;=reg_dbx+s_mpudbx     ;address #1 (3 bytes)
 addrb    .dsb s_addr		;=addra+s_addr         ;address #2 (3 bytes)
-	.text
 faca     .dsb s_pfac		;=addrb+s_addr         ;primary accumulator (2 bytes)
 facax    .dsb s_pfac		;=faca+s_pfac          ;extended primary accumulator (2 bytes)
 facb     .dsb s_sfac		;=facax+s_pfac         ;secondary accumulator (4 bytes)
 facc     .dsb s_sfac		;=facb+s_sfac          ;tertiary accumulator (4 bytes)
-	.zero
 operand  .dsb s_oper		;=facc+s_sfac          ;instruction operand (3 bytes)
-	.text
 auxbufix .dsb s_byte		;=operand+s_oper       ;auxiliary buffer index
 ibufidx  .dsb s_byte		;=auxbufix+s_byte      ;input buffer index
 bitsdig  .dsb s_byte		;=ibufidx+s_byte       ;bits per numeral
@@ -898,6 +894,7 @@ mcftopc  =mcftwork+s_byte      ;instruction opcode
 mcftbnk  =mcftopc+s_byte       ;banks
 ;
 	.text
+
 ;
 ;===============================================================================
 ;
