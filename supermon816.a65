@@ -829,40 +829,48 @@ srinit   =%00000000            ;SR initialization value
 ;
 ;DIRECT PAGE STORAGE
 ;
-reg_pbx  =zeropage             ;PB shadow
-reg_pcx  =reg_pbx+s_mpupbx     ;PC shadow
-reg_srx  =reg_pcx+s_mpupcx     ;SR shadow
-reg_ax   =reg_srx+s_mpusrx     ;.C shadow
-reg_xx   =reg_ax+s_word        ;.X shadow
-reg_yx   =reg_xx+s_word        ;.Y shadow
-reg_spx  =reg_yx+s_word        ;SP shadow
-reg_dpx  =reg_spx+s_mpuspx     ;DP shadow
-reg_dbx  =reg_dpx+s_mpudpx     ;DB shadow
+; when entering the monitor, the workspace is cleared
+; from reg_pbx to vopsflag (vopsflag-reg_pbx bytes)
+;
+	;.zero
+reg_pbx  .dsb s_mpupbx		;=zeropage             ;PB shadow
+reg_pcx  .dsb s_mpupcx		;=reg_pbx+s_mpupbx     ;PC shadow
+reg_srx  .dsb s_mpusrx		;=reg_pcx+s_mpupcx     ;SR shadow
+reg_ax   .dsb s_word		;=reg_srx+s_mpusrx     ;.C shadow
+reg_xx   .dsb s_word		;=reg_ax+s_word        ;.X shadow
+reg_yx   .dsb s_word		;=reg_xx+s_word        ;.Y shadow
+reg_spx  .dsb s_mpuspx		;=reg_yx+s_word        ;SP shadow
+reg_dpx  .dsb s_mpudpx		;=reg_spx+s_mpuspx     ;DP shadow
+reg_dbx  .dsb s_mpudbx		;=reg_dpx+s_mpudpx     ;DB shadow
 ;
 ;
 ;	general workspace...
 ;
-addra    =reg_dbx+s_mpudbx     ;address #1
-addrb    =addra+s_addr         ;address #2
-faca     =addrb+s_addr         ;primary accumulator
-facax    =faca+s_pfac          ;extended primary accumulator
-facb     =facax+s_pfac         ;secondary accumulator
-facc     =facb+s_sfac          ;tertiary accumulator
-operand  =facc+s_sfac          ;instruction operand
-auxbufix =operand+s_oper       ;auxiliary buffer index
-ibufidx  =auxbufix+s_byte      ;input buffer index
-bitsdig  =ibufidx+s_byte       ;bits per numeral
-numeral  =bitsdig+s_byte       ;numeral buffer
-radix    =numeral+s_byte       ;radix index
-admodidx =radix+s_byte         ;addressing mode index
-charcnt  =admodidx+s_byte      ;character counter
-instsize =charcnt+s_word       ;instruction size
-mnepck   =instsize+s_word      ;encoded mnemonic
-opcode   =mnepck+s_mnepck      ;current opcode
-status   =opcode+s_byte        ;I/O status flag
-xrtemp   =status+s_byte        ;temp .X storage
-eopsize  =xrtemp+s_byte        ;entered operand size
-flimflag =eopsize+s_byte       ;forced long immediate...
+	.zero
+addra    .dsb s_addr		;=reg_dbx+s_mpudbx     ;address #1 (3 bytes)
+addrb    .dsb s_addr		;=addra+s_addr         ;address #2 (3 bytes)
+	.text
+faca     .dsb s_pfac		;=addrb+s_addr         ;primary accumulator (2 bytes)
+facax    .dsb s_pfac		;=faca+s_pfac          ;extended primary accumulator (2 bytes)
+facb     .dsb s_sfac		;=facax+s_pfac         ;secondary accumulator (4 bytes)
+facc     .dsb s_sfac		;=facb+s_sfac          ;tertiary accumulator (4 bytes)
+	.zero
+operand  .dsb s_oper		;=facc+s_sfac          ;instruction operand (3 bytes)
+	.text
+auxbufix .dsb s_byte		;=operand+s_oper       ;auxiliary buffer index
+ibufidx  .dsb s_byte		;=auxbufix+s_byte      ;input buffer index
+bitsdig  .dsb s_byte		;=ibufidx+s_byte       ;bits per numeral
+numeral  .dsb s_byte		;=bitsdig+s_byte       ;numeral buffer
+radix    .dsb s_byte		;=numeral+s_byte       ;radix index
+admodidx .dsb s_byte		;=radix+s_byte         ;addressing mode index
+charcnt  .dsb s_word		;=admodidx+s_byte      ;character counter
+instsize .dsb s_word		;=charcnt+s_word       ;instruction size
+mnepck   .dsb s_mnepck		;=instsize+s_word      ;encoded mnemonic (2 bytes)
+opcode   .dsb s_byte		;=mnepck+s_mnepck      ;current opcode
+status   .dsb s_byte		;=opcode+s_byte        ;I/O status flag
+xrtemp   .dsb s_byte		;=status+s_byte        ;temp .X storage
+eopsize  .dsb s_byte		;=xrtemp+s_byte        ;entered operand size
+flimflag .dsb s_byte		;=eopsize+s_byte       ;forced long immediate...
 ;
 ;	xx000000
 ;	||
@@ -878,9 +886,9 @@ flimflag =eopsize+s_byte       ;forced long immediate...
 ;	the effect of the most recent REP or SEP instruction.
 ;	----------------------------------------------------------------------------
 ;
-iopsize  =flimflag+s_byte      ;operand size
-range    =iopsize+s_byte       ;allowable radix range
-vopsflag =range+s_byte         ;VOPS & ROPS mode bits
+iopsize  .dsb s_byte		;=flimflag+s_byte      ;operand size
+range    .dsb s_byte		;=iopsize+s_byte       ;allowable radix range
+vopsflag .dsb s_byte		;=range+s_byte         ;VOPS & ROPS mode bits
 ;
 ;
 ;	copy/fill workspace (overlaps some of the above)...
@@ -888,6 +896,8 @@ vopsflag =range+s_byte         ;VOPS & ROPS mode bits
 mcftwork =faca                 ;start of copy/fill code
 mcftopc  =mcftwork+s_byte      ;instruction opcode
 mcftbnk  =mcftopc+s_byte       ;banks
+;
+	.text
 ;
 ;===============================================================================
 ;
@@ -972,7 +982,7 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;
 ;SUPERMON 816 JUMP TABLE
 ;
-         *=_origin_
+         ;*=_origin_
 ;
 JMON     bra mon               ;cold start entry
 JMONBRK  bra monbrk            ;software interrupt intercept
@@ -2816,7 +2826,7 @@ ascbin   sep #m_setr
 ;	process numerals...
 ;
 ascbin01 jsr getchar           ;get next char
-         beq ascbin03          ;EOI
+         beq ascbin03a         ;EOI
 ;
          cmp #' '
          beq ascbin03          ;blank — EOF
@@ -2825,6 +2835,7 @@ ascbin01 jsr getchar           ;get next char
          beq ascbin03          ;comma — EOF
 ;
          cmp #a_ht
+ascbin03a
          beq ascbin03          ;tab — EOF
 ;
          jsr nybtobin          ;change to binary
@@ -2920,9 +2931,10 @@ ascbin02 lda faca              ;N
          dey
          bne @0000010
 ;
-         bcc ascbin01          ;next if no overflow
+         ;bcc ascbin01          ;next if no overflow
 ;
          bcs ascbin04          ;overflow — error
+         jmp ascbin01          ;next if no overflow
 ;
 ;
 ;	finish up...
@@ -4135,7 +4147,8 @@ cpcode   phb                   ;must preserve data bank
          plb                   ;restore data bank
          ;jml monce             ;return to command executive
          jmp @monce             ;return to command executive
-cpcodeee =*                    ;placeholder — do not delete
+;cpcodeee =*                    ;placeholder — do not delete
+cpcodeee
 ;
 ;===============================================================================
 ;
