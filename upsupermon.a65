@@ -984,14 +984,17 @@ vecbrkia .word 0               ;system indirect BRK vector
 ;mon: SUPERMON 816 COLD START
 ;
 mon      rep #m_seta           ;16-bit .A
+	.al
          lda vecbrki           ;BRK vector
-         cmp !#jmonbrk         ;pointing at monitor?
+         cmp #!jmonbrk         ;pointing at monitor?
          beq monreg            ;yes, ignore cold start
 ;
          sta vecbrkia          ;save vector for exit
-         lda !#jmonbrk         ;Supermon 816 intercepts...
+         lda #!jmonbrk         ;Supermon 816 intercepts...
          sta vecbrki           ;BRK handler
          sep #m_setr           ;8 bit registers
+	.xs
+	.as
          ldx #vopsflag-reg_pbx
 ;
 @0000010 stz reg_pbx,x         ;clear DP storage
@@ -1004,7 +1007,8 @@ mon      rep #m_seta           ;16-bit .A
          lda #srinit
          sta reg_srx           ;status register
          rep #m_seta      
-         lda !#hwstack         ;top of hardware stack
+	.al
+         lda #!hwstack         ;top of hardware stack
          tcs                   ;set SP...
 ;
 ;			-------------------------------------------------------
@@ -1015,8 +1019,9 @@ mon      rep #m_seta           ;16-bit .A
 ;
          tdc                   ;get & save DP...
          sta reg_dpx           ;into shadow register
-         lda !#0               ;flush .B
+         lda #!0               ;flush .B
          sep #m_seta        
+	.as
          phk
          pla                   ;capture PB &...
          sta reg_pbx           ;set
@@ -1055,10 +1060,13 @@ monbrk   ;pea localdp          ;operating environment's direct page
          plx
          pla
          rep #m_setr           ;store 16 bit registers
+	.xl
+	.al
          sta reg_ax            ;.A
          stx reg_xx            ;.X
          sty reg_yx            ;.Y
          sep #m_setx           ;8 bit index registers
+	.xs
          pla                   ;get DP &...
          sta reg_dpx           ;store
          plx                   ;get DB &...
@@ -1068,6 +1076,7 @@ monbrk   ;pea localdp          ;operating environment's direct page
          pla                   ;get PC &...
          sta reg_pcx           ;store
          sep #m_seta
+	.as
          pla                   ;get PB &...
          sta reg_pbx           ;store
          cli                   ;reenable IRQs
@@ -1083,6 +1092,7 @@ monbrk   ;pea localdp          ;operating environment's direct page
 ;
 moncom   jsr sprint            ;print heading
          rep #m_seta
+	.al
          tsc                   ;get SP &...
          sta reg_spx           ;store
          rep #%11111111        ;clear SR &...
@@ -1115,8 +1125,10 @@ monreg   bcs @0000010          ;okay to proceed
          jsr dpyhex            ;display as hex ASCII
          jsr printspc          ;inter-field space
          rep #m_seta
+	.al
          lda reg_pcx
          sep #m_seta
+	.as
          jsr dpyhexw           ;display PC
          ldx #2
          jsr multspc           ;inter-field spacing
@@ -1141,8 +1153,10 @@ monreg   bcs @0000010          ;okay to proceed
 ;
 @0000030 jsr printspc          ;spacing
          rep #m_seta
+	.al
          lda reg_ax,y          ;get register value
          sep #m_seta
+	.as
          jsr dpyhexw           ;convert & display
 	;.rept s_word
          iny
@@ -1163,9 +1177,12 @@ monreg   bcs @0000010          ;okay to proceed
 ;monce: COMMAND EXECUTIVE
 ;	
 monce    sep #m_seta           ;8-bit .A
+	.as
          lda #0                ;default buffer index
 ;
 moncea   sep #m_setr           ;alternate entry point
+	.as
+	.xs
          sta ibufidx           ;(re)set buffer index
          pea mm_prmpt
          jsr sprint            ;display input prompt
@@ -1186,9 +1203,11 @@ moncea   sep #m_setr           ;alternate entry point
          asl                   ;double for offset
          tax
          rep #m_seta
+	.al
          lda mpcextab,x        ;command address -1
          pha                   ;prime the stack
          sep #m_seta
+	.as
          jmp getparm           ;evaluate parm & execute command
 ;
 @0000030 dex
@@ -1209,6 +1228,8 @@ moncea   sep #m_setr           ;alternate entry point
 ;monerr: COMMON ERROR HANDLER
 ;
 monerr   sep #m_setr           ;8 bit registers
+	.as
+	.xs
 ;
 monerraa jsr dpyerr            ;indicate an error &...
          bra monce             ;return to input loop
@@ -1298,13 +1319,14 @@ monasc   bcc @0000020          ;assembly address entered
 ;	-----------------------------------------------------------------------
 ;
          rep #m_seta           ;16 bit load
+	.al
          lda mnepck            ;packed menmonic
          ldx #opc_mvn          ;MVN opcode
-         cmp !#mne_mvn         ;is it MVN?
+         cmp #!mne_mvn         ;is it MVN?
          beq monasc01          ;yes
 ;
          ldx #opc_mvp          ;MVP opcode
-         cmp !#mne_mvp         ;is it MVP?
+         cmp #!mne_mvp         ;is it MVP?
          bne monasc02          ;no
 ;
 ;
@@ -1312,6 +1334,7 @@ monasc   bcc @0000020          ;assembly address entered
 ;
 monasc01 stx opcode            ;store relevant opcode
          sep #m_seta
+	.as
          jsr instdata          ;get instruction data
          stx eopsize           ;effective operand size
          inx
@@ -1343,6 +1366,7 @@ monasc01 stx opcode            ;store relevant opcode
 ;	continue with normal assembly...
 ;
 monasc02 sep #m_seta           ;back to 8 bits
+	.as
 ;
 monasc03 jsr getcharw          ;get next char
          beq monasc06          ;EOI, no argument
@@ -1414,9 +1438,11 @@ monasc07 txa                   ;convert index...
          asl                   ;to offset
          tay                   ;now mnemonic table index
          rep #m_seta           ;16 bit compare
+	.al
          lda mnetab,y          ;get mnemonic from table
          cmp mnepck            ;compare to entered mnemonic
          sep #m_seta           ;back to 8 bits
+	.as
          beq @0000020          ;match
 ;
 @0000010 dex                   ;try next mnemonic
@@ -1456,9 +1482,11 @@ monasc07 txa                   ;convert index...
          asl                   ;create table index
          tay
          rep #m_seta
+	.al
          lda ms_lutab,y        ;mode lookup table
          sta addrb             ;set pointer
          sep #m_seta
+	.as
          ldy #0
 ;
 @0000060 lda (addrb),y         ;table addressing mode
@@ -1617,11 +1645,13 @@ mondsc   bcs @0000010          ;no parameters
 ;
 @0000010 jsr clrfaca           ;clear accumulator
          rep #m_seta
+	.al
          clc
          lda addra             ;starting address
-         adc !#n_dbytes        ;default bytes
+         adc #!n_dbytes        ;default bytes
          sta faca              ;effective ending address
          sep #m_seta
+	.as
          lda addra+s_word      ;starting bank
          adc #0
          sta faca+s_word       ;effective ending bank
@@ -1668,22 +1698,28 @@ monjmp   jsr setxaddr          ;set execution address
          bcc monjmpab          ;too much input — error
 ;
          rep #m_seta           ;16 bit .A
+	.al
          lda reg_spx
          tcs                   ;restore SP
 ;
 monjmpaa sep #m_seta
+	.as
          lda reg_pbx
          pha                   ;restore PB
          rep #m_seta
+	.al
          lda reg_pcx
          pha                   ;restore PC
          sep #m_seta
+	.as
          lda reg_srx
          pha                   ;restore SR
          lda reg_dbx
          pha
          plb                   ;restore DB
          rep #m_setr
+	.xl
+	.al
          lda reg_dpx
          tcd                   ;restore DP
          lda reg_ax            ;restore .C
@@ -1713,15 +1749,19 @@ monjsr   jsr setxaddr          ;set execution address
          bcc monjmpab          ;too much input — error
 ;
          rep #m_seta
+	.al
          lda reg_spx
          tcs                   ;restore SP &...
          jsr monjmpaa          ;call subroutine
          php                   ;push SR
          rep #m_setr
+	.al
+	.xl
          sta reg_ax            ;save...
          stx reg_xx            ;register...
          sty reg_yx            ;returns
          sep #m_setx           ;8 bit .X & .Y
+	.xs
          plx                   ;get & save...
          stx reg_srx           ;return SR
          tsc                   ;get & save...
@@ -1729,6 +1769,7 @@ monjsr   jsr setxaddr          ;set execution address
          tdc                   ;get & save...
          sta reg_dpx           ;DP pointer
          sep #m_seta           ;8 bit .A
+	.as
          phk                   ;get &...
          pla                   ;save...
          sta reg_pbx           ;return PB
@@ -1805,8 +1846,10 @@ moncmp   bcs @0000030          ;start not given — quit
          bcs @0000030          ;done
 ;
          rep #m_seta
+	.al
          inc operand           ;bump bits 0-15
          sep #m_seta
+	.as
          bne @0000010
 ;
          inc operand+s_word    ;bump bits 16-23
@@ -1830,6 +1873,7 @@ moncpy   bcs @0000040          ;start not given — quit
          bcs @0000050          ;range or other error
 ;
          rep #m_seta
+	.al
          sec
          lda addrb             ;ending address
          sbc addra             ;starting address
@@ -1837,11 +1881,14 @@ moncpy   bcs @0000040          ;start not given — quit
 ;
          sta facb              ;bytes to copy
          sep #m_seta
+	.as
          rep #m_setx
+	.xl
          lda operand+s_word    ;target bank
          ldy operand           ;target address
          cmp addra+s_word      ;source bank
          rep #m_seta
+	.al
          bne @0000020          ;can use forward copy
 ;
          cpy addra             ;source address
@@ -1897,11 +1944,13 @@ mondmp   bcs @0000010          ;no parameters
 ;
 @0000010 jsr clrfaca           ;clear accumulator
          rep #m_seta
+	.al
          clc
          lda addra             ;starting address
-         adc !#n_mbytes        ;default bytes
+         adc #!n_mbytes        ;default bytes
          sta faca              ;effective ending address
          sep #m_seta
+	.as
          lda addra+s_word      ;starting bank
          adc #0
          sta faca+s_word       ;effective ending bank
@@ -1960,6 +2009,7 @@ monfil   bcs @0000010          ;start not given — quit
 ;
          jsr facaddrb          ;store <end>
          rep #m_seta
+	.al
          sec
          lda addrb             ;ending address
          sbc addra             ;starting address
@@ -1967,6 +2017,7 @@ monfil   bcs @0000010          ;start not given — quit
 ;
          sta facb              ;bytes to copy
          sep #m_seta
+	.as
          jsr getparm           ;evaluate <fill>
          bcs @0000020          ;not entered — error
 ;
@@ -1981,12 +2032,15 @@ monfil   bcs @0000010          ;start not given — quit
          lda operand           ;<fill>
          sta [addra]           ;fill 1st location
          rep #m_setr           ;16 bit operations
+	.al
+	.xl
          lda facb              ;get byte count
          beq @0000010          ;only 1 location — finished
 ;
          dec                   ;zero align &...
          pha                   ;protect
          sep #m_seta
+	.as
          lda addra+s_word      ;start bank
          xba
          lda addrb+s_word      ;end bank
@@ -2116,11 +2170,13 @@ monchr   bcs @0000040          ;dump registers & quit
          bpl @0000020          ;8 bit register size
 ;
          rep #m_seta           ;16 bit register size
+	.al
 ;
 @0000020 ldx facc              ;get register index
          lda faca              ;get parm
          sta reg_pbx,x         ;put in shadow storage
          sep #m_seta
+	.as
          asl facc+s_byte       ;mode flag to carry
          txa                   ;register index
          adc #s_byte           ;at least 1 byte stored
@@ -2149,8 +2205,9 @@ monchr   bcs @0000040          ;dump registers & quit
 monxit   bcc @0000020          ;no parameters allowed
 ;
          rep #m_seta
+	.al
          lda vecbrki           ;BRK indirect vector
-         cmp !#jmonbrk         ;we intercept it?
+         cmp #!jmonbrk         ;we intercept it?
          bne @0000010          ;no, don't change it
 ;
          lda vecbrkia          ;old vector
@@ -2158,6 +2215,8 @@ monxit   bcc @0000020          ;no parameters allowed
          stz vecbrkia          ;invalidate old vector
 ;         
 @0000010 sep #m_setr
+	.xs
+	.as
          jml vecexit           ;long jump to exit
 ;
 @0000020 jmp monerr            ;goto error handler
@@ -2240,9 +2299,11 @@ dpycodaa jsr putcha            ;print prefix
          asl                   ;double for...
          tay                   ;mnemonic table offset
          rep #m_seta           ;16 bit load
+	.al
          lda mnetab,y          ;copy encoded mnemonic to...
          sta mnepck            ;working storage
          sep #m_seta           ;back to 8 bits
+	.as
          jsr instdata          ;extract mode & size data
          sta vopsflag          ;save mode flags
          sty admodidx          ;save mode index
@@ -2359,9 +2420,11 @@ dpycod02 stz vopsflag          ;clear
 @0000010 asl                   ;convert addressing mode to...
          tax                   ;symbology table index
          rep #m_seta           ;do a 16 bit load
+	.al
          lda ms_lutab,x        ;addressing symbol pointer
          pha
          sep #m_seta           ;back to 8 bit loads
+	.as
          ldy #0
          lda (1,s),y           ;get 1st char
          cmp #a_blank
@@ -2444,6 +2507,8 @@ dpyibuf  pea ibuffer
 ;	-----------------------------------------------------------------------
 ;
 dpymem   sep #m_setr
+	.as
+	.xs
          stz charcnt           ;reset
          lda #memprfx
          jsr putcha            ;display prefix
@@ -2502,9 +2567,11 @@ gendbs   pea dc_bs            ;destructive backspace
 ;
 prntladr php                   ;protect register sizes
          sep #m_seta
+	.as
          lda addra+s_word      ;get bank byte &...
          jsr dpyhex            ;display it
          rep #m_seta
+	.al
          lda addra             ;get 16 bit address
          plp                   ;restore register sizes
 ;
@@ -2522,13 +2589,17 @@ prntladr php                   ;protect register sizes
 ;
 dpyhexw  php                   ;save register sizes
          rep #m_seta
+	.al
          pha                   ;protect value
          sep #m_seta
+	.as
          xba                   ;get MSB &...
          jsr dpyhex            ;display
          rep #m_seta
+	.al
          pla                   ;recover value
          sep #m_seta           ;only LSB visible
+	.as
          plp                   ;reset reg sizes & fall through
 ;
 ;===============================================================================
@@ -2647,14 +2718,16 @@ printcmn jmp putcha
 ;	-----------------------------------------------------------------------
 ;
 sprint   sep #m_seta           ;8 bit accumulator
+	.as
          rep #m_setx           ;16 bit index
+	.xl
 ;
 ;------------------------------------------------------------------------------
 @retaddr =1                    ;return address
-@src     =.retaddr+s_word      ;string address stack offset
+@src     =@retaddr+s_word      ;string address stack offset
 ;------------------------------------------------------------------------------
 ;
-         ldy !#0
+         ldy #!0
          clc                   ;no initial error
 ;
 @0000010 lda (@src,s),y        ;get a byte
@@ -2670,6 +2743,7 @@ sprint   sep #m_seta           ;8 bit accumulator
          ply                   ;clear string pointer
          phx                   ;replace RTS
          sep #m_setx
+	.xs
          rts
 ;
 ;===============================================================================
@@ -2700,6 +2774,8 @@ sprint   sep #m_seta           ;8 bit accumulator
 ;	-----------------------------------------------------------------------
 ;
 ascbin   sep #m_setr
+	.as
+	.xs
          jsr clrfaca           ;clear accumulator
          stz charcnt           ;zero char count
          stz radix             ;initialize
@@ -2766,6 +2842,7 @@ ascbin01 jsr getchar           ;get next char
          ldx #0                ;accumulator index
          ldy #s_pfac/s_word    ;iterations
          rep #m_seta
+	.al
          clc
 ;
 @0000020 lda faca,x            ;N
@@ -2781,6 +2858,7 @@ ascbin01 jsr getchar           ;get next char
          bcs ascbin04          ;overflow — error
 ;
          sep #m_seta
+	.as
 ;
 ;
 ;	compute N × base for binary, octal or hex,
@@ -2788,6 +2866,7 @@ ascbin01 jsr getchar           ;get next char
 ;
 @0000030 ldx bitsdig           ;bits per digit
          rep #m_seta           ;16-bit shifts
+	.al
 ;
 @0000040 asl faca
          rol faca+s_word
@@ -2797,6 +2876,7 @@ ascbin01 jsr getchar           ;get next char
          bne @0000040          ;next shift
 ;
          sep #m_seta           ;back to 8 bits
+	.as
          bit radix             ;check base
          bpl ascbin02          ;not decimal
 ;
@@ -2805,6 +2885,7 @@ ascbin01 jsr getchar           ;get next char
 ;
          ldy #s_pfac
          rep #m_seta
+	.al
 ;
 @0000050 lda faca,x            ;N × 8
          adc facb,x            ;N × 2
@@ -2819,6 +2900,7 @@ ascbin01 jsr getchar           ;get next char
          bcs ascbin04          ;overflow — error
 ;
          sep #m_seta
+	.as
 ;
 ;
 ;	add current numeral to partial result...
@@ -2846,6 +2928,7 @@ ascbin02 lda faca              ;N
 ascbin03 clc                   ;no error
 ;
 ascbin04 sep #m_seta           ;reset if necessary
+	.as
          lda charcnt           ;load char count
          rts                   ;done
 ;
@@ -3045,6 +3128,7 @@ binhex   jsr bintonyb          ;generate binary values
 ;
 clrfaca  php
          rep #m_seta
+	.al
          stz faca
          stz faca+s_word
          plp
@@ -3056,6 +3140,7 @@ clrfaca  php
 ;
 clrfacb  php
          rep #m_seta
+	.al
          stz facb
          stz facb+s_word
          plp
@@ -3152,11 +3237,13 @@ nybtobin jsr toupper           ;convert case if necessary
 ;
 calccnt  jsr clrfacb           ;clear accumulator
          rep #m_seta
+	.al
          sec
          lda addrb             ;ending address
          sbc addra             ;starting address
          sta facb              ;byte count
          sep #m_seta
+	.as
          lda addrb+s_word      ;handle banks
          sbc addra+s_word
          sta facb+s_word
@@ -3182,7 +3269,9 @@ clroper  phx
 ;cpfwsup: FOWARD COPY MEMORY SETUP
 ;
 cpfwsup  rep #m_setr
-         ldx !#opc_mvn         ;"move next" opcode
+	.al
+	.xl
+         ldx #!opc_mvn         ;"move next" opcode
          bra cpsup
 ;         
 ;===============================================================================
@@ -3190,7 +3279,9 @@ cpfwsup  rep #m_setr
 ;cprvsup: REVERSE COPY MEMORY SETUP
 ;
 cprvsup  rep #m_setr
-         ldx !#opc_mvp         ;"move previous" opcode
+	.al
+	.xl
+         ldx #!opc_mvp         ;"move previous" opcode
 ;         
 ;===============================================================================
 ;
@@ -3200,7 +3291,8 @@ cpsup    pha                   ;save banks
          txa                   ;protect...
          xba                   ;opcode
          sep #m_seta
-         ldx !#cpcodeee-cpcode-1
+	.as
+         ldx #!cpcodeee-cpcode-1
 ;
 @0000010 lda \3cpcode,x        ;transfer copy code to...
          sta mcftwork,x        ;to workspace
@@ -3210,6 +3302,7 @@ cpsup    pha                   ;save banks
          xba                   ;recover opcode &...
          sta mcftopc           ;set it
          rep #m_seta
+	.al
          pla                   ;get banks &...
          sta mcftbnk           ;set them
          rts
@@ -3229,8 +3322,9 @@ cpsup    pha                   ;save banks
 ;	-----------------------------------------------------------------------
 ;
 decdcnt  rep #m_seta
+	.al
          lda facb+s_word       ;count MSW
-         and !#%11111111       ;squelch noise in .B
+         and #!%11111111       ;squelch noise in .B
          sec
          ora facb              ;count LSW
          beq @0000020          ;zero, just exit
@@ -3239,6 +3333,7 @@ decdcnt  rep #m_seta
          sbc charcnt           ;bytes processed
          sta facb
          sep #m_seta
+	.as
          lda facb+s_word
          sbc #0                ;handle borrow
          bcc @0000010          ;underflow
@@ -3250,6 +3345,7 @@ decdcnt  rep #m_seta
 @0000010 sec
 ;
 @0000020 sep #m_seta
+	.as
          rts
 ;
 ;===============================================================================
@@ -3334,6 +3430,8 @@ facaoper ldx #s_oper-1
 ;	-----------------------------------------------------------------------
 ;
 facasize sep #m_setr
+	.as
+	.xs
          ldx #s_dword-1
 ;
 @0000010 lda faca,x            ;get byte
@@ -3421,6 +3519,7 @@ getparm  phy                   ;preserve
 ;	-----------------------------------------------------------------------
 ;
 nxtaddra sep #m_seta
+	.as
          lda addra+s_word      ;bits 16-23
          cmp addrb+s_word
          bcc incaddra          ;increment
@@ -3428,9 +3527,11 @@ nxtaddra sep #m_seta
          bne @0000010          ;don't increment
 ;
          rep #m_seta
+	.al
          lda addra             ;bits 0-15
          cmp addrb             ;condition flags
          sep #m_seta
+	.as
          bcc incaddra          ;increment
 ;
 @0000010 rts
@@ -3462,10 +3563,12 @@ getbyte  lda [addra]           ;get a byte
 ;
 incaddra php
          rep #m_seta
+	.al
          inc addra             ;bump bits 0-15
          bne @0000010
 ;
          sep #m_seta
+	.as
          inc addra+s_word      ;bump bits 16-23
 ;
 @0000010 plp
@@ -3478,13 +3581,17 @@ incaddra php
 incoper  clc
          php
          rep #m_setr
+	.al
+	.xl
          pha
          inc operand           ;handle base address
          bne @0000010
 ;              
          sep #m_seta
+	.as
          inc operand+s_word    ;handle bank
          rep #m_seta
+	.al
 ;
 @0000010 pla
          plp
@@ -3503,6 +3610,8 @@ incoper  clc
 ;	-----------------------------------------------------------------------
 ;
 instdata sep #m_setr
+	.as
+	.xs
          lda mnetabam,x        ;addressing mode data
          pha                   ;save mode flag bits
          pha                   ;save size data
@@ -3537,8 +3646,10 @@ instdata sep #m_setr
 ;	-----------------------------------------------------------------------
 ;
 offtarg  rep #m_seta
+	.al
          lda addra             ;base address
          sep #m_seta
+	.as
          lsr instsize          ;bit 0 will be set if...
          bcs @0000010          ;a long branch
 ;
@@ -3550,10 +3661,12 @@ offtarg  rep #m_seta
          xba                   ;expose address LSB
 ;
 @0000010 rep #m_seta
+	.al
          clc
          adc operand           ;calculate target address
          sta operand           ;new operand
          sep #m_seta
+	.as
          lda #s_xword
          sta instsize          ;effective instruction size
          rts
@@ -3569,9 +3682,11 @@ setxaddr bcs @0000010          ;no address given
          bcs @0000020          ;out of range
 ;
          rep #m_seta
+	.al
          lda faca              ;execution address
          sta reg_pcx           ;set new PC value
          sep #m_seta
+	.as
          lda faca+s_word
          sta reg_pbx           ;set new PB value
 ;
@@ -3600,13 +3715,14 @@ setxaddr bcs @0000010          ;no address given
 targoff  ;this line intentionally has no code
 ;
 ;-----------------------------------------------------------------------------
-.btype   =facc+5               ;branch type flag
+@btype   =facc+5               ;branch type flag
 ;-----------------------------------------------------------------------------
 ;
          lda instsize          ;instruction size will tell...
          lsr                   ;if long or short branch
-         ror .btype            ;set branch type
+         ror @btype            ;set branch type
          rep #m_seta           ;16-bit accumulator
+	.al
          clc
          lda addra             ;instruction address
          adc instsize          ;instruction size
@@ -3616,7 +3732,8 @@ targoff  ;this line intentionally has no code
          sbc addrb             ;base address
          sta operand           ;proposed offset
          sep #m_seta           ;8-bit accumulator
-         bit .btype            ;check branch range
+	.as
+         bit @btype            ;check branch range
          bmi @0000030          ;long
 ;
          bcc @0000020          ;short backward branch
@@ -3692,6 +3809,8 @@ getchar  phx
          phy
          php                   ;save register sizes
          sep #m_setr           ;force 8 bits
+	.as
+	.xs
          ldx ibufidx           ;buffer index
          lda ibuffer,x         ;get char
          inc ibufidx           ;bump index
@@ -3732,7 +3851,7 @@ getpat   stz status            ;clear pattern type indicator
          jsr getcharw          ;get next
          beq @0000070          ;EOS
 ;
-         cmp #'''
+         cmp #'\''
          bne @0000010          ;not ASCII input
 ;
          ror status            ;condition flag
@@ -3909,6 +4028,7 @@ input    ldx ibufidx
 ;lodbnk: LOAD SOURCE & DESTINATION BANKS
 ;
 lodbnk   sep #m_seta
+	.as
          lda operand+s_word    ;destination bank
          xba                   ;make it MSB
          lda addra+s_word      ;source bank is LSB
