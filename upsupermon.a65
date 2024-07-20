@@ -1144,9 +1144,10 @@ monreg   bcs @0000010          ;okay to proceed
          lda reg_ax,y          ;get register value
          sep #m_seta
          jsr dpyhexw           ;convert & display
-	.rept s_word
+	;.rept s_word
          iny
-	.endr
+         iny
+	;.endr
          cpy #reg_dbx-reg_ax
          bcc @0000030          ;next
 ;
@@ -2649,14 +2650,14 @@ sprint   sep #m_seta           ;8 bit accumulator
          rep #m_setx           ;16 bit index
 ;
 ;------------------------------------------------------------------------------
-.retaddr =1                    ;return address
-.src     =.retaddr+s_word      ;string address stack offset
+@retaddr =1                    ;return address
+@src     =.retaddr+s_word      ;string address stack offset
 ;------------------------------------------------------------------------------
 ;
          ldy !#0
          clc                   ;no initial error
 ;
-@0000010 lda (.src,s),y        ;get a byte
+@0000010 lda (@src,s),y        ;get a byte
          beq @0000020          ;done
 ;
          jsr putcha            ;write to console port
@@ -2770,9 +2771,10 @@ ascbin01 jsr getchar           ;get next char
 @0000020 lda faca,x            ;N
          rol                   ;N=N*2
          sta facb,x
-	.rept s_word
+	;.rept s_word
          inx
-	.endr
+         inx
+	;.endr
          dey
          bne @0000020
 ;
@@ -2807,9 +2809,10 @@ ascbin01 jsr getchar           ;get next char
 @0000050 lda faca,x            ;N × 8
          adc facb,x            ;N × 2
          sta faca,x            ;now N × 10
-	.rept s_word
+	;.rept s_word
          inx
-	.endr
+         inx
+	;.endr
          dey
          bne @0000050
 ;
@@ -2862,9 +2865,12 @@ bintonyb pha                   ;save
          and #bcdumask         ;extract LSN
          tax                   ;save it
          pla
-	.rept s_bnybbl        ;extract MSN
+	;.rept s_bnybbl        ;extract MSN
          lsr
-	.endr
+         lsr
+         lsr
+         lsr
+	;.endr
          rts
 ;
 ;===============================================================================
@@ -3382,9 +3388,12 @@ getparm  phy                   ;preserve
          lda charcnt           ;get count
          rts                   ;done
 ;
-@0000040	.rept 3               ;clean up stack
+@0000040	
+	;.rept 3               ;clean up stack
          pla
-	.endr
+         pla
+         pla
+	;.endr
          jmp monerr            ;abort w/error
 ;
 ;===============================================================================
@@ -3501,9 +3510,12 @@ instdata sep #m_setr
          tay                   ;save
          pla                   ;recover data
          and #opsmask          ;mask mode fields &...
-	.rept n_opslsr        ;extract operand size
+	;.rept n_opslsr        ;extract operand size
          lsr
-	.endr
+         lsr
+         lsr
+         lsr
+	;.endr
          tax                   ;operand size
          pla                   ;recover mode flags
          and #vopsmask         ;discard mode & size fields
@@ -3992,9 +4004,11 @@ teststop jsr getcha            ;poll console
 ;	-----------------------------------------------------------------------
 ;
 cpcode   phb                   ;must preserve data bank
-	.rept s_mvinst
+	;.rept s_mvinst
          nop                   ;placeholder
-	.endr
+         nop                   ;placeholder
+         nop                   ;placeholder
+	;.endr
          plb                   ;restore data bank
          jml monce             ;return to command executive
 cpcodeee =*                    ;placeholder — do not delete
