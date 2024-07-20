@@ -1,0 +1,124 @@
+
+
+;       =======================================================================
+;       This section defines the interface between Supermon 816 & the host
+;       system.   Change these definitions to suit your system, but do not
+;       change any label names.  All definitions must have valid values in
+;       order to assemble & run Supermon 816.
+;       =======================================================================
+;
+;       =======================================================================
+_origin_ =$001000              ;assembly address...
+;
+;       Set _ORIGIN_ to Supermon 816's desired assembly address.
+;       =======================================================================
+;
+;       =======================================================================
+vecexit  =$00b3ff              ;exit to environment address...
+;
+;       Set VECEXIT to where Supermon 816 should go when it exits.  Supermon 816
+;       will do a JML (long jump) to this address, which means VECEXIT must be a
+;       24 bit address.
+;       =======================================================================
+;
+;       =======================================================================
+vecbrki  =$0092                ;BRK handler indirect vector...
+;
+;       Supermon 816 will modify this vector so that execution of a BRK instruc-
+;       tion is intercepted & the registers  are  captured.   Your BRK front end
+;       should jump through this vector after pushing the registers as follows:
+;
+;                phb                   ;save DB
+;                phd                   ;save DP
+;                rep #%00110000        ;16 bit registers
+;                pha
+;                phx
+;                phy
+;                jmp (vecbrki)         ;indirect vector
+;
+;       When a G or J command is issued, the above sequence will be reversed be-
+;       fore a jump is made to the code to be executed.  Upon exit from Supermon
+;       816, the original address at VECBRKI will be restored.  Note that this
+;       vector must be in bank $00.
+;
+;       If your BRK front end doesn't conform to the above you will have to mod-
+;       ify Supermon 816 to accommodate the differences.  The most likely needed
+;       changes will be in the order in which registers are pushed to the stack.
+;       =======================================================================
+;
+;
+;       =======================================================================
+hwstack  =$0000ff              ;top of hardware stack...
+;
+;       Supermon 816 initializes the stack pointer to this address when the cold
+;       start at JMON is called to enter the monitor.  The stack pointer will be
+;       undisturbed when entry into Supermon 816 is through JMONBRK.
+;
+;       JMON & JMONBRK are defined in the Supermon 816's jump table.
+;       =======================================================================
+;
+;       =======================================================================
+zeropage =$00                  ;Supermon 816's direct page...
+;
+;       Supermon 816 uses direct page starting at this address.  Be sure that no
+;       conflict occurs with other software, as an overwrite of any of these
+;       locations may be fatal to Supermon 816.
+;       =======================================================================
+;
+;       =======================================================================
+getcha   =$00ffff              ;get datum from TIA-232 channel A...
+
+;       GETCHA refers to an operating system API call that returns a datum in
+;       the 8 bit accumulator.  Supermon 816 assumes that GETCHA is a non-block-
+;       ing subroutine & returns with carry clear to indicate that a datum is in
+;       .A, or with carry set to indicate that no datum was available.  GETCHA
+;       will be called with a JSR instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from GETCHA.
+;       You may have to modify Supermon 816 at all calls to GETCHA if your "get
+;       datum" routine works differently than described.
+;       =======================================================================
+;
+;       =======================================================================
+putcha   =$00ffff              ;print character on console...
+;
+;       PUTCHA refers to an operating system API call that prints a character to
+;       the console screen.  The character to be printed will be in .A, which
+;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
+;       until the character can be processed.  PUTCHA will be called with a JSR
+;       instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
+;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
+;       character" routine works differently than described.
+;       =======================================================================
+;
+;       =======================================================================
+stopkey  =$03                  ;display abort key...
+;
+;       Supermon 816 will poll for a "stop key" during display operations, such
+;       as code disassembly & memory dumps, so as to abort further processing &
+;       return to the command prompt.  STOPKEY must be defined with the ASCII
+;       value that the "stop key" will emit when typed.  The polling is via a
+;       call to GETCHA (described above).  The default STOPKEY definition of $03
+;       is for ASCII <ETX> or [Ctrl-C].  An alternative definition could be $1B,
+;       which is ASCII <ESC> or [ESC].
+;       =======================================================================
+;
+ibuffer  =$008000              ;input buffer &...
+auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
+;
+;       =======================================================================
+;       Supermon 816 will use the above definitions for workspace in various
+;       ways.  These buffers may be located anywhere in RAM that is convenient.
+;       The buffers are stateless, which means that unless Supermon 816 has
+;       control of your system they may be overwritten without consequence.
+;       =======================================================================
+
+
+
+
+
+
+#include "supermon816.a65"
+
