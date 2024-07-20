@@ -986,11 +986,11 @@ vecbrkia .word 0               ;system indirect BRK vector
 mon      rep #m_seta           ;16-bit .A
 	.al
          lda vecbrki           ;BRK vector
-         cmp #!jmonbrk         ;pointing at monitor?
+         cmp #!JMONBRK         ;pointing at monitor?
          beq monreg            ;yes, ignore cold start
 ;
          sta vecbrkia          ;save vector for exit
-         lda #!jmonbrk         ;Supermon 816 intercepts...
+         lda #!JMONBRK         ;Supermon 816 intercepts...
          sta vecbrki           ;BRK handler
          sep #m_setr           ;8 bit registers
 	.xs
@@ -2207,7 +2207,7 @@ monxit   bcc @0000020          ;no parameters allowed
          rep #m_seta
 	.al
          lda vecbrki           ;BRK indirect vector
-         cmp #!jmonbrk         ;we intercept it?
+         cmp #!JMONBRK         ;we intercept it?
          bne @0000010          ;no, don't change it
 ;
          lda vecbrkia          ;old vector
@@ -2217,7 +2217,9 @@ monxit   bcc @0000020          ;no parameters allowed
 @0000010 sep #m_setr
 	.xs
 	.as
-         jml vecexit           ;long jump to exit
+         ;jml vecexit           ;long jump to exit
+	; TODO: 24-bit
+         jmp vecexit           ;long jump to exit
 ;
 @0000020 jmp monerr            ;goto error handler
 ;
@@ -3293,8 +3295,9 @@ cpsup    pha                   ;save banks
          sep #m_seta
 	.as
          ldx #!cpcodeee-cpcode-1
-;
-@0000010 lda \3cpcode,x        ;transfer copy code to...
+
+	; TODO: was \3cpcode,x - maybe force 3 byte address?
+@0000010 lda cpcode,x        ;transfer copy code to...
          sta mcftwork,x        ;to workspace
          dex
          bpl @0000010
@@ -4130,7 +4133,8 @@ cpcode   phb                   ;must preserve data bank
          nop                   ;placeholder
 	;.endr
          plb                   ;restore data bank
-         jml monce             ;return to command executive
+         ;jml monce             ;return to command executive
+         jmp @monce             ;return to command executive
 cpcodeee =*                    ;placeholder — do not delete
 ;
 ;===============================================================================
@@ -4300,7 +4304,7 @@ mnetab   .word mne_xba         ;  0 — XBA
          .word mne_txy         ; 90 — TXY
          .word mne_stz         ; 91 — STZ
 ;
-n_mnemon ={*-mnetab}/s_word    ;total mnemonics in above table
+n_mnemon =(*-mnetab)/s_word    ;total mnemonics in above table
 ;
 ;
 ;	mnemonic lookup indices in opcode order...
