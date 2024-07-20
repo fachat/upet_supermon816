@@ -940,7 +940,7 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;         .endm
 ;
 ;lf       .macro                ;carriage return/line feed
-#define	CR	.byt a_cr, a_lf
+#define	LF	.byt a_cr, a_lf
 ;         .byte a_cr,a_lf
 ;         .endm
 ;
@@ -1027,7 +1027,7 @@ mon      rep #m_seta           ;16-bit .A
 ;
 ;	print startup banner...
 ;
-         pea #mm_entry         ;"Supermon 816..."
+         pea mm_entry         ;"Supermon 816..."
          bra moncom
 ;
 ;===============================================================================
@@ -1042,7 +1042,7 @@ mon      rep #m_seta           ;16-bit .A
 ;	ing a BRK.
 ;	------------------------------------------------------------------------
 ;
-monbrk   ;pea #localdp          ;operating environment's direct page
+monbrk   ;pea localdp          ;operating environment's direct page
          ;pld                   ;set it...
 ;
 ;	------------------------------------------------------------------------
@@ -1071,7 +1071,7 @@ monbrk   ;pea #localdp          ;operating environment's direct page
          pla                   ;get PB &...
          sta reg_pbx           ;store
          cli                   ;reenable IRQs
-         pea #mm_brk           ;"*BRK"
+         pea mm_brk           ;"*BRK"
 ;
 ;===============================================================================
 ;
@@ -1105,7 +1105,7 @@ monreg   bcs @0000010          ;okay to proceed
 ;
          jmp monerr            ;error if called with a parm
 ;
-@0000010 pea #mm_regs
+@0000010 pea mm_regs
          jsr sprint            ;display register heading
 ;
 ;
@@ -1166,7 +1166,7 @@ monce    sep #m_seta           ;8-bit .A
 ;
 moncea   sep #m_setr           ;alternate entry point
          sta ibufidx           ;(re)set buffer index
-         pea #mm_prmpt
+         pea mm_prmpt
          jsr sprint            ;display input prompt
          jsr input             ;await some input
 ;
@@ -1734,7 +1734,7 @@ monjsr   jsr setxaddr          ;set execution address
          phb                   ;get &...
          pla                   ;save...
          sta reg_dbx           ;return DB
-         pea #mm_rts           ;"*RET"
+         pea mm_rts           ;"*RET"
          jmp moncom            ;return to monitor
 ;
 ;===============================================================================
@@ -2382,7 +2382,7 @@ dpycod02 stz vopsflag          ;clear
 ;
          stz vopsflag          ;reset
          phy                   ;protect operand index
-         pea #ms_move
+         pea ms_move
          jsr sprint            ;display MVN/MVP operand separator
          ply                   ;recover operand index again
          bra @0000030          ;continue
@@ -2421,14 +2421,14 @@ dpycod03 lda operand           ;operand LSB
 ;
 ;clearlin: CLEAR DISPLAY LINE
 ;
-clearlin pea #dc_cl
+clearlin pea dc_cl
          bra dpyerraa
 ;
 ;===============================================================================
 ;
 ;dpyibuf: DISPLAY MONITOR INPUT BUFFER CONTENTS
 ;
-dpyibuf  pea #ibuffer
+dpyibuf  pea ibuffer
          bra dpyerraa
 ;
 ;===============================================================================
@@ -2473,17 +2473,17 @@ dpymem   sep #m_setr
          stz ibuffer,x         ;terminate ASCII string
          lda #memsepch
          jsr putcha            ;separate ASCII from bytes
-         pea #dc_bf
+         pea dc_bf
          jsr sprint            ;select reverse video
          jsr dpyibuf           ;display ASCII equivalents
-         pea #dc_sf            ;normal video
+         pea dc_sf            ;normal video
          bra dpyerraa
 ;
 ;===============================================================================
 ;
 ;dpyerr: DISPLAY ERROR SIGNAL
 ;
-dpyerr   pea #mm_err           ;"*ERR"
+dpyerr   pea mm_err           ;"*ERR"
 ;
 dpyerraa jsr sprint
          rts
@@ -2492,7 +2492,7 @@ dpyerraa jsr sprint
 ;
 ;gendbs: GENERATE DESTRUCTIVE BACKSPACE
 ;
-gendbs   pea #dc_bs            ;destructive backspace
+gendbs   pea dc_bs            ;destructive backspace
          bra dpyerraa
 ;
 ;===============================================================================
@@ -2586,7 +2586,7 @@ multspc  txa
 ;
 ;newline: PRINT NEWLINE (CRLF)
 ;
-newline  pea #dc_lf
+newline  pea dc_lf
          bra dpyerraa
 ;
 ;===============================================================================
@@ -3822,7 +3822,7 @@ getcharw jsr getchar           ;get from buffer
 input    ldx ibufidx
          stz ibuffer,x         ;be sure buffer is terminated
          jsr dpyibuf           ;print default input if any
-         pea #dc_cn
+         pea dc_cn
          jsr sprint            ;enable cursor
          ldx ibufidx           ;starting buffer index
 ;
@@ -3864,7 +3864,7 @@ input    ldx ibufidx
          bne @0000050          ;no
 ;
          phx                   ;protect input count
-         pea #dc_co
+         pea dc_co
          jsr sprint            ;cursor off
          plx                   ;recover input count
          stz ibuffer,x         ;terminate input
