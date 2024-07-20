@@ -1,6 +1,10 @@
-	.opt proc65816,caseinsensitive,swapbin
+	;.opt proc65816,caseinsensitive,swapbin
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;*                                                                                 *
+;* Adaption of the Supermon816 monitor by BCS Technology to the Micro-PET Family   *
+;* of boards by A. Fachat in 2024                                                  *
+;*                                                                                 *
+;* =============================================================================== *
 ;*      SUPERMON 816 MACHINE LANGUAGE MONITOR FOR THE W65C816S MICROPROCESSOR      *
 ;* =============================================================================== *
 ;*      Copyright ©1991-2023 by BCS Technology Limited.  All rights reserved.      *
@@ -176,13 +180,15 @@
 ;	* VERSION INFORMATION *
 ;	* * * * * * * * * * * *
 ;
-softvers .macro
-         .byte "1"             ;major
-         .byte "."
-         .byte "1"             ;minor
-         .byte "."
-         .byte "3r"            ;revision
-         .endm
+
+;softvers .macro
+#define	SOFTVERSION				\
+         .byte "1"             ;major		:\
+         .byte "."				:\
+         .byte "1"             ;minor		:\
+         .byte "."				:\
+         .byte "3r"            ;revision	:\
+;         .endm
 ;
 ;REVISION TABLE
 ;
@@ -894,63 +900,73 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;	the functions needed by Supermon 816 are included.
 ;	----------------------------------------------------------------------------
 ;
-_csi_    .macro                ;Control Sequence Introducer
-         .byte a_esc, "["
-         .endm
+;_csi_    .macro                ;Control Sequence Introducer
+;         .byte a_esc, "["
+;         .endm
 ;
 ;
 ;	clearing data...
 ;
-bs       .macro                ;destructive backspace
-         .byte a_bs," ",a_bs
-         .endm
+#define	BS	.byt a_bs, " ", a_bs
+
+;bs       .macro                ;destructive backspace
+;         .byte a_bs," ",a_bs
+;         .endm
 ;
-cl       .macro                ;clear to end of line
-         _csi_
-         .byte "0K"
-         .endm
+;cl       .macro                ;clear to end of line
+#define	CL	/* none */
+;         _csi_
+;         .byte "0K"
+;         .endm
 ;
 ;
 ;	cursor control...
 ;
-cn       .macro                ;cursor on
-         _csi_
-         .byte "?25h"
-         .endm
+;cn       .macro                ;cursor on
+#define	CN	/* none */
+;         _csi_
+;         .byte "?25h"
+;         .endm
 ;
-co       .macro                ;cursor off
-         _csi_
-         .byte "?25l"
-         .endm
+;co       .macro                ;cursor off
+#define	CO	/* none */
+;         _csi_
+;         .byte "?25l"
+;         .endm
 ;
-cr       .macro                ;carriage return
-         .byte a_cr
-         .endm
+;cr       .macro                ;carriage return
+#define	CR	.byt a_cr
+;         .byte a_cr
+;         .endm
 ;
-lf       .macro                ;carriage return/line feed
-         .byte a_cr,a_lf
-         .endm
+;lf       .macro                ;carriage return/line feed
+#define	CR	.byt a_cr, a_lf
+;         .byte a_cr,a_lf
+;         .endm
 ;
 ;
 ;	display attributes...
 ;
-bf       .macro                ;reverse foreground
-         _csi_
-         .byte "7m"
-         
-         .endm
+#define	BF	/* none */
+;bf       .macro                ;reverse foreground
+;         _csi_
+;         .byte "7m"
+;         
+;         .endm
 ;
-sf       .macro                ;normal foreground
-         _csi_
-         .byte "0m"
-         .endm
+#define	SF	/* none */
+;sf       .macro                ;normal foreground
+;         _csi_
+;         .byte "0m"
+;         .endm
 ;
 ;
 ;	miscellaneous control...
 ;
-rb       .macro                ;ring "bell"
-         .byte a_bel
-         .endm
+#define	RB	.byt a_bel
+;rb       .macro                ;ring "bell"
+;         .byte a_bel
+;         .endm
 ;
 ;===============================================================================
 ;
@@ -4786,58 +4802,60 @@ ms_stky  .byte "(,S),Y",0      ;(<offset>,S),Y
 ;
 ;CONSOLE DISPLAY CONTROL STRINGS
 ;
-dc_bf    bf                    ;reverse foreground
+dc_bf    BF                    ;reverse foreground
          .byte 0
 ;
-dc_bs    bs                    ;destructive backspace
+dc_bs    BS                    ;destructive backspace
          .byte 0
 ;
-dc_cl    cl                    ;clear to end of line 
+dc_cl    CL                    ;clear to end of line 
          .byte 0
 ;
-dc_cn    cn                    ;cursor on
+dc_cn    CN                    ;cursor on
          .byte 0
 ;
-dc_co    co                    ;cursor off
+dc_co    CO                    ;cursor off
          .byte 0
 ;
-dc_lf    lf                    ;newline
+dc_lf    LF                    ;newline
          .byte 0
 ;
-dc_sf    sf                    ;normal foreground
+dc_sf    SF                    ;normal foreground
          .byte 0
 ;
 ;===============================================================================
 ;
 ;MONITOR STRINGS
 ;
-mm_brk   rb
-         lf
+mm_brk   RB
+         LF
          .byte "*BRK"
-         lf
+         LF
          .byte 0
 ;
-mm_entry lf
-         .byte a_lf,"Supermon 816 "
-         softvers
-         lf
+mm_entry LF
+	 LF
+         .byte "Supermon 816 "
+         ;softvers
+	 SOFTVERSION
+         LF
          .byte 0
 ;
 mm_err   .byte " *ERR",0
 ;
-mm_prmpt lf
-         sf
+mm_prmpt LF
+         SF
          .byte ".",0
 ;
-mm_regs  lf
+mm_regs  LF
          .byte "  PB  PC   nvmxdizc  .C   .X   .Y   SP   DP  DB"
-         lf
+         LF
          .byte "; ",0
 ;
-mm_rts   rb
-         lf
+mm_rts   RB
+         LF
          .byte "*RTS"
-         lf
+         LF
          .byte 0
 ;
 _txtend_ =*                     ;end of program text
