@@ -994,9 +994,9 @@ mon      rep #m_seta           ;16-bit .A
          sep #m_setr           ;8 bit registers
          ldx #vopsflag-reg_pbx
 ;
-.0000010 stz reg_pbx,x         ;clear DP storage
+@0000010 stz reg_pbx,x         ;clear DP storage
          dex
-         bpl .0000010
+         bpl @0000010
 ;
 ;
 ;	initialize register shadows...
@@ -1101,11 +1101,11 @@ moncom   jsr sprint            ;print heading
 ;	syntax: R
 ;	---------
 ;
-monreg   bcs .0000010          ;okay to proceed
+monreg   bcs @0000010          ;okay to proceed
 ;
          jmp monerr            ;error if called with a parm
 ;
-.0000010 pea #mm_regs
+@0000010 pea #mm_regs
          jsr sprint            ;display register heading
 ;
 ;
@@ -1127,19 +1127,19 @@ monreg   bcs .0000010          ;okay to proceed
          ldx reg_srx           ;SR
          ldy #s_bibyte         ;bits in a byte
 ;
-.0000020 txa                   ;remaining SR bits
+@0000020 txa                   ;remaining SR bits
          asl                   ;grab one of them
          tax                   ;save remainder
          lda #'0'              ;a clear bit but...
          adc #0                ;adjust if set &...
          jsr putcha            ;print
          dey                   ;bit processed
-         bne .0000020          ;do another
+         bne @0000020          ;do another
 ;
 ;
 ;	display .C, .X, .Y, SP & DP...
 ;
-.0000030 jsr printspc          ;spacing
+@0000030 jsr printspc          ;spacing
          rep #m_seta
          lda reg_ax,y          ;get register value
          sep #m_seta
@@ -1148,7 +1148,7 @@ monreg   bcs .0000010          ;okay to proceed
          iny
 	.endr
          cpy #reg_dbx-reg_ax
-         bcc .0000030          ;next
+         bcc @0000030          ;next
 ;
 ;
 ;	display DB...
@@ -1170,16 +1170,16 @@ moncea   sep #m_setr           ;alternate entry point
          jsr sprint            ;display input prompt
          jsr input             ;await some input
 ;
-.0000010 jsr getcharc          ;read from buffer
+@0000010 jsr getcharc          ;read from buffer
          beq monce             ;terminator, just loop
 ;
          cmp #a_blank
-         beq .0000010          ;strip leading blanks
+         beq @0000010          ;strip leading blanks
 ;
          ldx #n_mpctab-1       ;number of primary commands
 ;
-.0000020 cmp mpctab,x          ;search primary command list
-         bne .0000030
+@0000020 cmp mpctab,x          ;search primary command list
+         bne @0000030
 ;
          txa                   ;get index
          asl                   ;double for offset
@@ -1190,18 +1190,18 @@ moncea   sep #m_setr           ;alternate entry point
          sep #m_seta
          jmp getparm           ;evaluate parm & execute command
 ;
-.0000030 dex
-         bpl .0000020          ;continue searching primary commands
+@0000030 dex
+         bpl @0000020          ;continue searching primary commands
 ;
          ldx #n_radix-1        ;number of radices
 ;
-.0000040 cmp radxtab,x         ;search conversion command list
-         bne .0000050
+@0000040 cmp radxtab,x         ;search conversion command list
+         bne @0000050
 ;
          jmp monenv            ;convert & display parameter
 ;
-.0000050 dex
-         bpl .0000040
+@0000050 dex
+         bpl @0000040
 ;
 ;===============================================================================
 ;
@@ -1224,16 +1224,16 @@ monerraa jsr dpyerr            ;indicate an error &...
 ;	which code may be assembled.
 ;	-----------------------------------------------------------------------
 ;
-monasc   bcc .0000020          ;assembly address entered
+monasc   bcc @0000020          ;assembly address entered
 ;
-.0000010 jmp monerr            ;terminate w/error
+@0000010 jmp monerr            ;terminate w/error
 ;
 ;
 ;	evaluate assembly address...
 ;
-.0000020 jsr facasize          ;check address...
+@0000020 jsr facasize          ;check address...
          cmp #s_dword          ;range
-         bcs .0000010          ;out of range — error
+         bcs @0000010          ;out of range — error
 ;
          jsr facaddra          ;store assembly address
 ;
@@ -1242,9 +1242,9 @@ monasc   bcc .0000020          ;assembly address entered
 ;
          ldx #s_auxbuf-s_byte
 ;
-.0000030 stz auxbuf,x          ;clear addressing mode buffer
+@0000030 stz auxbuf,x          ;clear addressing mode buffer
          dex
-         bne .0000030
+         bne @0000030
 ;
          lda #a_blank
          sta auxbuf            ;preamble placeholder
@@ -1260,28 +1260,28 @@ monasc   bcc .0000020          ;assembly address entered
 ;
          ldy #s_mnemon         ;expected mnemonic size
 ;
-.0000040 jsr getcharw          ;get from buffer wo/whitespace
-         bne .0000060          ;gotten
+@0000040 jsr getcharw          ;get from buffer wo/whitespace
+         bne @0000060          ;gotten
 ;
          cpy #s_mnemon         ;any input at all?
-         bcc .0000050          ;yes
+         bcc @0000050          ;yes
 ;
          jmp monce             ;no, abort further assembly
 ;
-.0000050 jmp monasc10          ;incomplete mnemonic — error
+@0000050 jmp monasc10          ;incomplete mnemonic — error
 ;
-.0000060 sec
+@0000060 sec
          sbc #a_mnecvt         ;ASCII to binary factor
          ldx #n_shfenc         ;shifts required to encode
 ;
-.0000070 lsr                   ;shift out a bit...
+@0000070 lsr                   ;shift out a bit...
          ror mnepck+s_byte     ;into...
          ror mnepck            ;encoded mnemonic
          dex
-         bne .0000070          ;next bit
+         bne @0000070          ;next bit
 ;
          dey
-         bne .0000040          ;get next char
+         bne @0000040          ;get next char
 ;
 ;
 ;	test for copy instruction...
@@ -1318,7 +1318,7 @@ monasc01 stx opcode            ;store relevant opcode
          ldx #s_oper-s_word    ;operand index
          stx xrtemp            ;set it
 ;
-.0000010 jsr ascbin            ;evaluate bank
+@0000010 jsr ascbin            ;evaluate bank
          bcs monasc04          ;conversion error
 ;
          beq monasc04          ;nothing returned — error
@@ -1331,7 +1331,7 @@ monasc01 stx opcode            ;store relevant opcode
          ldx xrtemp            ;operand index
          sta operand,x         ;store
          dec xrtemp            ;index=index-1
-         bpl .0000010          ;get destination bank
+         bpl @0000010          ;get destination bank
 ;
          jsr getcharr          ;should be no more input
          bne monasc04          ;there is — error
@@ -1347,7 +1347,7 @@ monasc03 jsr getcharw          ;get next char
          beq monasc06          ;EOI, no argument
 ;
          cmp #amp_flim
-         bne .0000010          ;no forced long immediate
+         bne @0000010          ;no forced long immediate
 ;
          lda flimflag          ;FLIM already set?
          bne monasc04          ;yes — error
@@ -1356,22 +1356,22 @@ monasc03 jsr getcharw          ;get next char
          sta flimflag          ;set flag &...
          bra monasc03          ;get next char
 ;
-.0000010 cmp #amp_imm          ;immediate mode?
-         beq .0000020          ;yes
+@0000010 cmp #amp_imm          ;immediate mode?
+         beq @0000020          ;yes
 ;
          cmp #amp_ind          ;indirect mode?
-         beq .0000020          ;yes
+         beq @0000020          ;yes
 ;
          cmp #amp_indl         ;indirect long mode?
-         bne .0000030          ;no
+         bne @0000030          ;no
 ;
-.0000020 sta auxbuf            ;set addressing mode preamble
+@0000020 sta auxbuf            ;set addressing mode preamble
          inc auxbufix          ;bump aux buffer index &...
-         bra .0000040          ;evaluate operand
+         bra @0000040          ;evaluate operand
 ;
-.0000030 dec ibufidx           ;position back to char
+@0000030 dec ibufidx           ;position back to char
 ;
-.0000040 jsr ascbin            ;evaluate operand
+@0000040 jsr ascbin            ;evaluate operand
          bne monasc05          ;evaluated
 ;
          bcs monasc04          ;conversion error
@@ -1390,24 +1390,24 @@ monasc05 jsr facasize          ;size operand
 ;
 monasc06 dec ibufidx           ;back to last char
          ldx auxbufix          ;mode buffer index
-         bne .0000010          ;preamble in buffer
+         bne @0000010          ;preamble in buffer
 ;
          inx                   ;step past preamble position
 ;
-.0000010 jsr getcharc          ;get a char w/forced UC
-         beq .0000030          ;EOI
+@0000010 jsr getcharc          ;get a char w/forced UC
+         beq @0000030          ;EOI
 ;
          cpx #s_auxbuf         ;mode buffer full?
          bcs monasc04          ;yes, too much input
 ;
-.0000020 sta auxbuf,x          ;store for comparison
+@0000020 sta auxbuf,x          ;store for comparison
          inx
-         bne .0000010
+         bne @0000010
 ;
 ;
 ;	evaluate mnemonic...
 ;
-.0000030 ldx #n_mnemon-1       ;starting mnemonic index
+@0000030 ldx #n_mnemon-1       ;starting mnemonic index
 ;
 monasc07 txa                   ;convert index...
          asl                   ;to offset
@@ -1416,22 +1416,22 @@ monasc07 txa                   ;convert index...
          lda mnetab,y          ;get mnemonic from table
          cmp mnepck            ;compare to entered mnemonic
          sep #m_seta           ;back to 8 bits
-         beq .0000020          ;match
+         beq @0000020          ;match
 ;
-.0000010 dex                   ;try next mnemonic
+@0000010 dex                   ;try next mnemonic
          bmi monasc04          ;unknown mnemonic — error
 ;
          bra monasc07          ;keep going
 ;
-.0000020 stx mnepck            ;save mnemonic index
+@0000020 stx mnepck            ;save mnemonic index
          txa
          ldx #0                ;trial opcode
 ;
-.0000030 cmp mnetabix,x        ;search index table...
-         beq .0000050          ;for a match
+@0000030 cmp mnetabix,x        ;search index table...
+         beq @0000050          ;for a match
 ;
-.0000040 inx                   ;keep going until we...
-         bne .0000030          ;search entire table
+@0000040 inx                   ;keep going until we...
+         bne @0000030          ;search entire table
 ;
          bra monasc04          ;this shouldn't happen!
 ;
@@ -1444,7 +1444,7 @@ monasc07 txa                   ;convert index...
 ;
 ;	evaluate addressing mode...
 ;
-.0000050 stx opcode            ;save trial opcode
+@0000050 stx opcode            ;save trial opcode
          jsr instdata          ;get related instruction data
          sta vopsflag          ;save 8/16 or relative flag
          stx iopsize           ;operand size
@@ -1460,83 +1460,83 @@ monasc07 txa                   ;convert index...
          sep #m_seta
          ldy #0
 ;
-.0000060 lda (addrb),y         ;table addressing mode
+@0000060 lda (addrb),y         ;table addressing mode
          cmp auxbuf,y          ;entered addressing mode
-         beq .0000080          ;okay so far
+         beq @0000080          ;okay so far
 ;
-.0000070 lda mnepck            ;reload mnemonic index        
-         bra .0000040          ;wrong opcode for addresing mode
+@0000070 lda mnepck            ;reload mnemonic index        
+         bra @0000040          ;wrong opcode for addresing mode
 ;
-.0000080 ora #0                ;last char the terminator?
-         beq .0000090          ;yes, evaluate operand
+@0000080 ora #0                ;last char the terminator?
+         beq @0000090          ;yes, evaluate operand
 ;
          iny
-         bra .0000060          ;keep testing
+         bra @0000060          ;keep testing
 ;
 ;
 ;	evaluate operand...
 ;
-.0000090 lda eopsize           ;entered operand size
-         bne .0000100          ;non-zero
+@0000090 lda eopsize           ;entered operand size
+         bne @0000100          ;non-zero
 ;
          ora iopsize           ;instruction operand size
-         bne .0000070          ;wrong opcode — keep trying
+         bne @0000070          ;wrong opcode — keep trying
 ;
          bra monasc08          ;assemble instruction
 ;
-.0000100 bit vopsflag          ;is this a branch?
-         bvs .0000160          ;yes, evaluate
+@0000100 bit vopsflag          ;is this a branch?
+         bvs @0000160          ;yes, evaluate
 ;
          lda iopsize           ;instruction operand size
          bit vopsflag          ;variable size operand allowed?
-         bmi .0000130          ;yes
+         bmi @0000130          ;yes
 ;
          bit flimflag          ;was forced immediate set?
-         bpl .0000110          ;no
+         bpl @0000110          ;no
 ;         
          jmp monasc10          ;yes — error
 ;
-.0000110 cmp eopsize           ;entered operand size
-         bcc .0000070          ;operand too big
+@0000110 cmp eopsize           ;entered operand size
+         bcc @0000070          ;operand too big
 ;
          sta eopsize           ;new operand size
          bra monasc08          ;assemble, otherwise...
 ;
-.0000120 cmp eopsize           ;exact size match required
-         bne .0000070          ;mismatch — wrong opcode
+@0000120 cmp eopsize           ;exact size match required
+         bne @0000070          ;mismatch — wrong opcode
 ;
          bra monasc08          ;assemble
 ;
 ;
 ;	process variable-size immediate mode operand...
 ;
-.0000130 ldx eopsize           ;entered operand size
+@0000130 ldx eopsize           ;entered operand size
          cpx #s_xword          ;check size
          bcs monasc10          ;too big — error
 ;
          bit flimflag          ;forced long immediate?
-         bpl .0000140          ;no
+         bpl @0000140          ;no
 ;
          ldx #s_word           ;promote operand size to...
          stx eopsize           ;16 bits
-         bra .0000150
+         bra @0000150
 ;
-.0000140 cpx #s_word           ;16 bits?
-         bne .0000150          ;no
+@0000140 cpx #s_word           ;16 bits?
+         bne @0000150          ;no
 ;
          ldy #flimmask         ;yes so force long...
          sty flimflag          ;immediate disassembly
 ;
-.0000150 inc                   ;new instruction operand size
+@0000150 inc                   ;new instruction operand size
          cmp eopsize           ;compare against operand size
-         bcc .0000070          ;mismatch — can't assemble
+         bcc @0000070          ;mismatch — can't assemble
 ;
          bra monasc08          ;okay, assemble
 ;
 ;
 ;	process relative branch...
 ;
-.0000160 jsr targoff           ;compute branch offset
+@0000160 jsr targoff           ;compute branch offset
          bcs monasc10          ;branch out of range
 ;
          sta eopsize           ;effective operand size
@@ -1547,17 +1547,17 @@ monasc07 txa                   ;convert index...
 monasc08 lda opcode            ;opcode
          sta [addra]           ;store at assembly address
          ldx eopsize           ;any operand to process?
-         beq .0000020          ;no
+         beq @0000020          ;no
 ;
          txy                   ;also storage offset
 ;
-.0000010 dex
+@0000010 dex
          lda operand,x         ;get operand byte &...
          sta [addra],y         ;poke into memory
          dey
-         bne .0000010          ;next
+         bne @0000010          ;next
 ;
-.0000020 lda #a_cr
+@0000020 lda #a_cr
          jsr putcha            ;return to left margin
          lda #asmprfx          ;assembly prefix
          jsr dpycodaa          ;disassemble & display
@@ -1568,9 +1568,9 @@ monasc08 lda opcode            ;opcode
 monasc09 lda #a_blank
          ldx #ascprmct-1
 ;
-.0000010 sta ibuffer,x         ;prepare buffer for...
+@0000010 sta ibuffer,x         ;prepare buffer for...
          dex                   ;next instruction
-         bpl .0000010
+         bpl @0000010
 ;
          lda #asmprfx          ;assemble code...
          sta ibuffer           ;prompt prefix
@@ -1603,18 +1603,18 @@ monasc10 jsr dpyerr            ;indicate error &...
 ;	syntax: D [<addr1> [<addr2>]]
 ;	-----------------------------------------------------------------------
 ;
-mondsc   bcs .0000010          ;no parameters
+mondsc   bcs @0000010          ;no parameters
 ;
          stz flimflag          ;reset to 8 bit mode
          jsr facasize          ;check starting...
          cmp #s_dword          ;address
-         bcs .0000050          ;out of range — error
+         bcs @0000050          ;out of range — error
 ;
          jsr facaddra          ;copy starting address
          jsr getparm           ;get ending address
-         bcc .0000020          ;gotten
+         bcc @0000020          ;gotten
 ;
-.0000010 jsr clrfaca           ;clear accumulator
+@0000010 jsr clrfaca           ;clear accumulator
          rep #m_seta
          clc
          lda addra             ;starting address
@@ -1624,30 +1624,30 @@ mondsc   bcs .0000010          ;no parameters
          lda addra+s_word      ;starting bank
          adc #0
          sta faca+s_word       ;effective ending bank
-         bcs .0000050          ;end address > $FFFFFF
+         bcs @0000050          ;end address > $FFFFFF
 ;
-.0000020 jsr facasize          ;check ending...
+@0000020 jsr facasize          ;check ending...
          cmp #s_dword          ;address
-         bcs .0000050          ;out of range — error
+         bcs @0000050          ;out of range — error
 ;
          jsr facaddrb          ;set ending address
          jsr getparm           ;check for excess input
-         bcc .0000050          ;present — error
+         bcc @0000050          ;present — error
 ;
          jsr calccnt           ;calculate bytes
-         bcc .0000050          ;end < start
+         bcc @0000050          ;end < start
 ;
-.0000030 jsr teststop          ;test for display stop
-         bcs .0000040          ;stopped
+@0000030 jsr teststop          ;test for display stop
+         bcs @0000040          ;stopped
 ;
          jsr newline           ;next line
          jsr dpycod            ;disassemble & display
          jsr decdcnt           ;decrement byte count
-         bcc .0000030          ;not done
+         bcc @0000030          ;not done
 ;
-.0000040 jmp monce             ;back to main loop
+@0000040 jmp monce             ;back to main loop
 ;
-.0000050 jmp monerr            ;address range error
+@0000050 jmp monerr            ;address range error
 ;
 ;===============================================================================
 ;
@@ -1748,33 +1748,33 @@ monjsr   jsr setxaddr          ;set execution address
 ;	of memory, starting at <addr>.
 ;	-----------------------------------------------------------------------
 ;
-monchm   bcs .0000030          ;no address given — quit
+monchm   bcs @0000030          ;no address given — quit
 ;
          jsr facasize          ;size address
          cmp #s_dword
-         bcs .0000040          ;address out of range — error
+         bcs @0000040          ;address out of range — error
 ;
          jsr facaddra          ;set starting address
          jsr getpat            ;evaluate change pattern
-         bcc .0000010          ;entered
+         bcc @0000010          ;entered
 ;
-         bpl .0000020          ;not entered
+         bpl @0000020          ;not entered
 ;
-         bra .0000040          ;evaluation error
+         bra @0000040          ;evaluation error
 ;
-.0000010 dey                   ;next byte
-         bmi .0000020          ;done
+@0000010 dey                   ;next byte
+         bmi @0000020          ;done
 ;
          lda auxbuf,y          ;write pattern...
          sta [addra],y         ;to memory
-         bra .0000010          ;next
+         bra @0000010          ;next
 ;
-.0000020 jsr newline           ;next line
+@0000020 jsr newline           ;next line
          jsr dpymem            ;regurgitate changes
 ;
-.0000030 jmp monce             ;back to command loop
+@0000030 jmp monce             ;back to command loop
 ;
-.0000040 jmp monerr            ;goto error handler
+@0000040 jmp monerr            ;goto error handler
 ;
 ;===============================================================================
 ;
@@ -1784,36 +1784,36 @@ monchm   bcs .0000030          ;no address given — quit
 ;	syntax: C <start> <end> <ref>
 ;	-----------------------------------------------------------------------
 ;
-moncmp   bcs .0000030          ;start not given — quit
+moncmp   bcs @0000030          ;start not given — quit
 ;
          jsr enddest           ;get end & reference addresses
-         bcs .0000040          ;range or other error
+         bcs @0000040          ;range or other error
 ;
          stz xrtemp            ;column counter
 ;
-.0000010 jsr teststop          ;check for stop
-         bcs .0000030          ;abort
+@0000010 jsr teststop          ;check for stop
+         bcs @0000030          ;abort
 ;
          lda [addra]           ;get from reference location
          cmp [operand]         ;test against compare location
-         beq .0000020          ;match, don't display address
+         beq @0000020          ;match, don't display address
 ;
          jsr dpycaddr          ;display current location
 ;
-.0000020 jsr nxtaddra          ;next reference location
-         bcs .0000030          ;done
+@0000020 jsr nxtaddra          ;next reference location
+         bcs @0000030          ;done
 ;
          rep #m_seta
          inc operand           ;bump bits 0-15
          sep #m_seta
-         bne .0000010
+         bne @0000010
 ;
          inc operand+s_word    ;bump bits 16-23
-         bra .0000010
+         bra @0000010
 ;
-.0000030 jmp monce             ;return to command exec
+@0000030 jmp monce             ;return to command exec
 ;
-.0000040 jmp monerr            ;goto error handler
+@0000040 jmp monerr            ;goto error handler
 ;
 ;===============================================================================
 ;
@@ -1823,16 +1823,16 @@ moncmp   bcs .0000030          ;start not given — quit
 ;	syntax: T <start> <end> <target>
 ;	-----------------------------------------------------------------------
 ;
-moncpy   bcs .0000040          ;start not given — quit
+moncpy   bcs @0000040          ;start not given — quit
 ;
          jsr enddest           ;get end & target addresses
-         bcs .0000050          ;range or other error
+         bcs @0000050          ;range or other error
 ;
          rep #m_seta
          sec
          lda addrb             ;ending address
          sbc addra             ;starting address
-         bcc .0000050          ;start > end — error
+         bcc @0000050          ;start > end — error
 ;
          sta facb              ;bytes to copy
          sep #m_seta
@@ -1841,16 +1841,16 @@ moncpy   bcs .0000040          ;start not given — quit
          ldy operand           ;target address
          cmp addra+s_word      ;source bank
          rep #m_seta
-         bne .0000020          ;can use forward copy
+         bne @0000020          ;can use forward copy
 ;
          cpy addra             ;source address
-         bcc .0000020          ;can use forward copy
+         bcc @0000020          ;can use forward copy
 ;
-         bne .0000010          ;must use reverse copy
+         bne @0000010          ;must use reverse copy
 ;
-         bra .0000050          ;copy in place — error
+         bra @0000050          ;copy in place — error
 ;
-.0000010 lda facb              ;get bytes to copy
+@0000010 lda facb              ;get bytes to copy
          pha                   ;protect
          jsr lodbnk            ;load banks
          jsr cprvsup           ;do reverse copy setup
@@ -1861,20 +1861,20 @@ moncpy   bcs .0000040          ;start not given — quit
          tay                   ;target end
          txa                   ;recover bytes to copy
          ldx addrb             ;source end
-         bra .0000030
+         bra @0000030
 ;
-.0000020 lda facb              ;get bytes to copy
+@0000020 lda facb              ;get bytes to copy
          pha                   ;protect
          jsr lodbnk            ;load banks
          jsr cpfwsup           ;do forward copy setup
          pla                   ;get bytes to copy
          ldx addra             ;source start
 ;
-.0000030 jmp mcftwork          ;copy memory
+@0000030 jmp mcftwork          ;copy memory
 ;
-.0000040 jmp monce             ;back to executive
+@0000040 jmp monce             ;back to executive
 ;
-.0000050 jmp monerr            ;error
+@0000050 jmp monerr            ;error
 ;
 ;===============================================================================
 ;
@@ -1884,17 +1884,17 @@ moncpy   bcs .0000040          ;start not given — quit
 ;	syntax: M [<addr1> [<addr2>]]
 ;	-----------------------------------------------------------------------
 ;
-mondmp   bcs .0000010          ;no parameters
+mondmp   bcs @0000010          ;no parameters
 ;
          jsr facasize          ;check address...
          cmp #s_dword          ;range
-         bcs .0000050          ;address out of range
+         bcs @0000050          ;address out of range
 ;
          jsr facaddra          ;copy starting address
          jsr getparm           ;get ending address
-         bcc .0000020          ;gotten
+         bcc @0000020          ;gotten
 ;
-.0000010 jsr clrfaca           ;clear accumulator
+@0000010 jsr clrfaca           ;clear accumulator
          rep #m_seta
          clc
          lda addra             ;starting address
@@ -1904,30 +1904,30 @@ mondmp   bcs .0000010          ;no parameters
          lda addra+s_word      ;starting bank
          adc #0
          sta faca+s_word       ;effective ending bank
-         bcs .0000050          ;end address > $FFFFFF
+         bcs @0000050          ;end address > $FFFFFF
 ;
-.0000020 jsr facasize          ;check ending address...
+@0000020 jsr facasize          ;check ending address...
          cmp #s_dword          ;range
-         bcs .0000050          ;out of range — error
+         bcs @0000050          ;out of range — error
 ;
          jsr facaddrb          ;copy ending address
          jsr getparm           ;check for excess input
-         bcc .0000050          ;error
+         bcc @0000050          ;error
 ;
          jsr calccnt           ;calculate bytes to dump
-         bcc .0000050          ;end < start
+         bcc @0000050          ;end < start
 ;
-.0000030 jsr teststop          ;test for display stop
-         bcs .0000040          ;stopped
+@0000030 jsr teststop          ;test for display stop
+         bcs @0000040          ;stopped
 ;
          jsr newline           ;next line
          jsr dpymem            ;display
          jsr decdcnt           ;decrement byte count
-         bcc .0000030          ;not done
+         bcc @0000030          ;not done
 ;
-.0000040 jmp monce             ;back to main loop
+@0000040 jmp monce             ;back to main loop
 ;
-.0000050 jmp monerr            ;address range error
+@0000050 jmp monerr            ;address range error
 ;
 ;===============================================================================
 ;
@@ -1939,49 +1939,49 @@ mondmp   bcs .0000010          ;no parameters
 ;	<start> & <end> must be in the same bank.
 ;	-----------------------------------------------------------------------
 ;
-monfil   bcs .0000010          ;start not given — quit
+monfil   bcs @0000010          ;start not given — quit
 ;
          jsr facasize          ;check size
          cmp #s_dword
-         bcs .0000020          ;out of range — error...
+         bcs @0000020          ;out of range — error...
 ;
          jsr facaddra          ;store start
          jsr getparm           ;evaluate end
-         bcs .0000020          ;not entered — error
+         bcs @0000020          ;not entered — error
 ;
          jsr facasize          ;check size
          cmp #s_dword
-         bcs .0000020          ;out of range — error
+         bcs @0000020          ;out of range — error
 ;
          lda faca+s_word       ;end bank
          cmp addra+s_word      ;start bank
-         bne .0000020          ;not same — error
+         bne @0000020          ;not same — error
 ;
          jsr facaddrb          ;store <end>
          rep #m_seta
          sec
          lda addrb             ;ending address
          sbc addra             ;starting address
-         bcc .0000020          ;start > end — error
+         bcc @0000020          ;start > end — error
 ;
          sta facb              ;bytes to copy
          sep #m_seta
          jsr getparm           ;evaluate <fill>
-         bcs .0000020          ;not entered — error
+         bcs @0000020          ;not entered — error
 ;
          jsr facasize          ;<fill> should be...
          cmp #s_word           ;8 bits
-         bcs .0000020          ;it isn't — error
+         bcs @0000020          ;it isn't — error
 ;
          jsr facaoper          ;store <fill>
          jsr getparm           ;should be no more parameters
-         bcc .0000020          ;there are — error
+         bcc @0000020          ;there are — error
 ;
          lda operand           ;<fill>
          sta [addra]           ;fill 1st location
          rep #m_setr           ;16 bit operations
          lda facb              ;get byte count
-         beq .0000010          ;only 1 location — finished
+         beq @0000010          ;only 1 location — finished
 ;
          dec                   ;zero align &...
          pha                   ;protect
@@ -1996,9 +1996,9 @@ monfil   bcs .0000010          ;start not given — quit
          iny                   ;fill-to starting location
          jmp mcftwork          ;fill memory
 ;
-.0000010 jmp monce             ;goto command executive
+@0000010 jmp monce             ;goto command executive
 ;
-.0000020 jmp monerr            ;goto error handler
+@0000020 jmp monerr            ;goto error handler
 ;
 ;===============================================================================
 ;
@@ -2008,51 +2008,51 @@ monfil   bcs .0000010          ;start not given — quit
 ;	syntax: H <addr1> <addr2> <pattern>
 ;	-----------------------------------------------------------------------
 ;
-monhnt   bcs .0000050          ;no start address
+monhnt   bcs @0000050          ;no start address
 ;
          jsr facasize          ;size starting address
          cmp #s_dword
-         bcs .0000060          ;address out of range — error
+         bcs @0000060          ;address out of range — error
 ;
          jsr facaddra          ;store starting address
          jsr getparm           ;evaluate ending address
-         bcs .0000060          ;no address — error
+         bcs @0000060          ;no address — error
 ;
          jsr facasize          ;size ending address
          cmp #s_dword
-         bcs .0000060          ;address out of range — error
+         bcs @0000060          ;address out of range — error
 ;
          jsr facaddrb          ;store ending address
          jsr calccnt           ;calculate byte range
-         bcc .0000060          ;end < start
+         bcc @0000060          ;end < start
 ;
          jsr getpat            ;evaluate search pattern
-         bcs .0000060          ;error
+         bcs @0000060          ;error
 ;
          stz xrtemp            ;clear column counter
 ;
-.0000010 jsr teststop          ;check for stop
-         bcs .0000050          ;abort
+@0000010 jsr teststop          ;check for stop
+         bcs @0000050          ;abort
 ;
          ldy auxbufix          ;pattern index
 ;
-.0000020 dey
-         bmi .0000030          ;pattern match
+@0000020 dey
+         bmi @0000030          ;pattern match
 ;
          lda [addra],y         ;get from memory
          cmp auxbuf,y          ;test against pattern
-         bne .0000040          ;mismatch, next location
+         bne @0000040          ;mismatch, next location
 ;
-         beq .0000020          ;match, keep testing
+         beq @0000020          ;match, keep testing
 ;
-.0000030 jsr dpycaddr          ;display current location
+@0000030 jsr dpycaddr          ;display current location
 ;
-.0000040 jsr nxtaddra          ;next location
-         bcc .0000010          ;not done
+@0000040 jsr nxtaddra          ;next location
+         bcc @0000010          ;not done
 ;
-.0000050 jmp monce             ;back to executive
+@0000050 jmp monce             ;back to executive
 ;
-.0000060 jmp monerr            ;goto error handler
+@0000060 jmp monerr            ;goto error handler
 ;
 ;===============================================================================
 ;
@@ -2063,12 +2063,12 @@ monhnt   bcs .0000050          ;no start address
 ;	-----------------------------------------------------------------------
 ;
 monenv   jsr getparmr          ;reread & evaluate parameter
-         bcs .0000020          ;none entered
+         bcs @0000020          ;none entered
 ;
          ldx #0                ;radix index
          ldy #n_radix          ;number of radices
 ;
-.0000010 phy                   ;save counter
+@0000010 phy                   ;save counter
          phx                   ;save radix index
          jsr newline           ;next line &...
          jsr clearlin          ;clear it
@@ -2086,9 +2086,9 @@ monenv   jsr getparmr          ;reread & evaluate parameter
          ply                   ;get counter
          inx
          dey                   ;all radices handled?
-         bne .0000010          ;no
+         bne @0000010          ;no
 
-.0000020 jmp monce             ;back to command exec
+@0000020 jmp monce             ;back to command exec
 ;
 ;===============================================================================
 ;
@@ -2100,23 +2100,23 @@ monenv   jsr getparmr          ;reread & evaluate parameter
 ;	; with no parameters is the same as the R command.
 ;	-----------------------------------------------------------------------
 ;
-monchr   bcs .0000040          ;dump registers & quit
+monchr   bcs @0000040          ;dump registers & quit
 ;
          ldy #0                ;register counter
          sty facc              ;initialize register index
 ;
-.0000010 jsr facasize          ;get parameter size
+@0000010 jsr facasize          ;get parameter size
          cmp rcvltab,y         ;check against size table
-         bcs .0000050          ;out of range
+         bcs @0000050          ;out of range
 ;
          lda rcvltab,y         ;determine number of bytes...
          cmp #s_word+1         ;to store
          ror facc+s_byte       ;condition flag
-         bpl .0000020          ;8 bit register size
+         bpl @0000020          ;8 bit register size
 ;
          rep #m_seta           ;16 bit register size
 ;
-.0000020 ldx facc              ;get register index
+@0000020 ldx facc              ;get register index
          lda faca              ;get parm
          sta reg_pbx,x         ;put in shadow storage
          sep #m_seta
@@ -2125,17 +2125,17 @@ monchr   bcs .0000040          ;dump registers & quit
          adc #s_byte           ;at least 1 byte stored
          sta facc              ;save new index
          jsr getparm           ;get a parameter
-         bcs .0000040          ;EOI
+         bcs @0000040          ;EOI
 ;
          iny                   ;bump register count
          cpy #n_regchv         ;all registers processed?
-         bne .0000010          ;no, keep going
+         bne @0000010          ;no, keep going
 ;
-.0000030 jsr alert             ;excessive input
+@0000030 jsr alert             ;excessive input
 ;
-.0000040 jmp monreg            ;display changes
+@0000040 jmp monreg            ;display changes
 ;
-.0000050 jmp monerr            ;goto error handler
+@0000050 jmp monerr            ;goto error handler
 ;
 ;===============================================================================
 ;
@@ -2145,21 +2145,21 @@ monchr   bcs .0000040          ;dump registers & quit
 ;	syntax: X
 ;	-----------------------------------------------------------------------
 ;
-monxit   bcc .0000020          ;no parameters allowed
+monxit   bcc @0000020          ;no parameters allowed
 ;
          rep #m_seta
          lda vecbrki           ;BRK indirect vector
          cmp !#jmonbrk         ;we intercept it?
-         bne .0000010          ;no, don't change it
+         bne @0000010          ;no, don't change it
 ;
          lda vecbrkia          ;old vector
          sta vecbrki           ;restore it
          stz vecbrkia          ;invalidate old vector
 ;         
-.0000010 sep #m_setr
+@0000010 sep #m_setr
          jml vecexit           ;long jump to exit
 ;
-.0000020 jmp monerr            ;goto error handler
+@0000020 jmp monerr            ;goto error handler
 ;
 ;================================================
 ; * * * * * * * * * * * * * * * * * * * * * * * *
@@ -2174,18 +2174,18 @@ monxit   bcc .0000020          ;no parameters allowed
 ;dpycaddr: DISPLAY CURRENT ADDRESS IN COLUMNS
 ;
 dpycaddr ldx xrtemp            ;column count
-         bne .0000010          ;not at right side
+         bne @0000010          ;not at right side
 ;
          jsr newline           ;next row
          ldx #n_hccols         ;max columns
 ;
-.0000010 cpx #n_hccols         ;max columns
-         beq .0000020          ;at left margin
+@0000010 cpx #n_hccols         ;max columns
+         beq @0000020          ;at left margin
 ;
          lda #a_ht
          jsr putcha            ;tab a column
 ;
-.0000020 dex                   ;one less column
+@0000020 dex                   ;one less column
          stx xrtemp            ;save column counter
          jmp prntladr          ;print reference address
 ;
@@ -2253,29 +2253,29 @@ dpycodaa jsr putcha            ;print prefix
 ;
          lda opcode            ;current opcode
          bit flimflag          ;operand display mode
-         bpl .0000010          ;8 bit .A & BIT immediate mode
+         bpl @0000010          ;8 bit .A & BIT immediate mode
 ;
          and #aimmaska         ;determine if...
          cmp #aimmaskb         ;.A or BIT immediate
-         beq .0000030          ;display 16 bit operand
+         beq @0000030          ;display 16 bit operand
 ;
          lda opcode            ;not .A or BIT immediate
 ;
-.0000010 bvc dpycod01          ;8 bit .X/.Y immediate mode
+@0000010 bvc dpycod01          ;8 bit .X/.Y immediate mode
 ;
          ldy #n_vopidx-1       ;opcodes to test
 ;
-.0000020 cmp vopidx,y          ;looking for LDX #, CPY #, etc.
-         beq .0000040          ;disassemble a 16 bit operand
+@0000020 cmp vopidx,y          ;looking for LDX #, CPY #, etc.
+         beq @0000040          ;disassemble a 16 bit operand
 ;
          dey
-         bpl .0000020          ;keep trying
+         bpl @0000020          ;keep trying
 ;
          bra dpycod01          ;not .X or .Y immediate
 ;
-.0000030 lda opcode            ;reload
+@0000030 lda opcode            ;reload
 ;
-.0000040 inx                   ;16 bit operand
+@0000040 inx                   ;16 bit operand
 ;
 ;
 ;	get & display operand bytes...
@@ -2288,11 +2288,11 @@ dpycod01 stx iopsize           ;operand size...
          sta xrtemp            ;initialize counter
          jsr clroper           ;clear operand
          ldy iopsize           ;operand size
-         beq .0000020          ;no operand
+         beq @0000020          ;no operand
 ;
          ldx #0                ;operand index
 ;
-.0000010 jsr getbyte           ;get operand byte
+@0000010 jsr getbyte           ;get operand byte
          sta operand,x         ;save
          phx                   ;protect operand index
          jsr printbyt          ;print operand byte
@@ -2302,9 +2302,9 @@ dpycod01 stx iopsize           ;operand size...
          plx                   ;get operand index
          inx                   ;bump it
          dey
-         bne .0000010          ;next
+         bne @0000010          ;next
 ;
-.0000020 ldx xrtemp            ;operand columns remaining
+@0000020 ldx xrtemp            ;operand columns remaining
          jsr multspc           ;space to mnemonic field
 ;
 ;
@@ -2312,26 +2312,26 @@ dpycod01 stx iopsize           ;operand size...
 ;
          ldy #s_mnemon         ;size of ASCII mnemonic
 ;
-.0000030 lda #0                ;initialize char
+@0000030 lda #0                ;initialize char
          ldx #n_shfenc         ;shifts to execute
 ;
-.0000040 asl mnepck            ;shift encoded mnemonic
+@0000040 asl mnepck            ;shift encoded mnemonic
          rol mnepck+s_byte
          rol
          dex
-         bne .0000040
+         bne @0000040
 ;
          adc #a_mnecvt         ;convert to ASCII &...
          pha                   ;stash
          dey
-         bne .0000030          ;continue with mnemonic
+         bne @0000030          ;continue with mnemonic
 ;
          ldy #s_mnemon
 ;
-.0000050 pla                   ;get mnenmonic byte
+@0000050 pla                   ;get mnenmonic byte
          jsr putcha            ;print it
          dey
-         bne .0000050
+         bne @0000050
 ;
 ;
 ;	display operand...
@@ -2351,11 +2351,11 @@ dpycod01 stx iopsize           ;operand size...
 dpycod02 stz vopsflag          ;clear
          lda admodidx          ;instruction addressing mode
          cmp #am_move          ;block move instruction?
-         bne .0000010          ;no
+         bne @0000010          ;no
 ;
          ror vopsflag          ;yes
 ;
-.0000010 asl                   ;convert addressing mode to...
+@0000010 asl                   ;convert addressing mode to...
          tax                   ;symbology table index
          rep #m_seta           ;do a 16 bit load
          lda ms_lutab,x        ;addressing symbol pointer
@@ -2364,37 +2364,37 @@ dpycod02 stz vopsflag          ;clear
          ldy #0
          lda (1,s),y           ;get 1st char
          cmp #a_blank
-         beq .0000020          ;no addresing mode preamble
+         beq @0000020          ;no addresing mode preamble
 ;
          jsr putcha            ;print preamble
 ;
-.0000020 lda #c_hex
+@0000020 lda #c_hex
          jsr putcha            ;operand displayed as hex
          ldy iopsize           ;operand size = index
 ;
-.0000030 dey
-         bmi .0000040          ;done with operand
+@0000030 dey
+         bmi @0000040          ;done with operand
 ;
          lda operand,y         ;get operand byte
          jsr dpyhex            ;print operand byte
          bit vopsflag          ;block move?
-         bpl .0000030          ;no
+         bpl @0000030          ;no
 ;
          stz vopsflag          ;reset
          phy                   ;protect operand index
          pea #ms_move
          jsr sprint            ;display MVN/MVP operand separator
          ply                   ;recover operand index again
-         bra .0000030          ;continue
+         bra @0000030          ;continue
 ;
-.0000040 plx                   ;symbology LSB
+@0000040 plx                   ;symbology LSB
          ply                   ;symbology MSB
          inx                   ;move past preamble
-         bne .0000050
+         bne @0000050
 ;
          iny
 ;
-.0000050 phy
+@0000050 phy
          phx
          jsr sprint            ;print postamble, if any
 ;
@@ -2407,12 +2407,12 @@ dpycod03 lda operand           ;operand LSB
          asl                   ;FLIMFLAG alignment
          ldx opcode            ;current instruction
          cpx #opc_rep          ;was it REP?
-         bne .0000010          ;no
+         bne @0000010          ;no
 ;
          tsb flimflag          ;set flag bits as required
          bra clearlin
 ;
-.0000010 cpx #opc_sep          ;was it SEP?
+@0000010 cpx #opc_sep          ;was it SEP?
          bne clearlin          ;no, just exit
 ;
          trb flimflag          ;clear flag bits as required
@@ -2450,7 +2450,7 @@ dpymem   sep #m_setr
          ldx #0                ;string buffer index
          ldy #n_dump           ;bytes per line
 ;
-.0000010 jsr getbyte           ;get from RAM, also...
+@0000010 jsr getbyte           ;get from RAM, also...
          pha                   ;save for decoding
          phx                   ;save string index
          jsr printbyt          ;display as hex ASCII
@@ -2458,17 +2458,17 @@ dpymem   sep #m_setr
          plx                   ;recover string index &...
          pla                   ;byte
          cmp #a_blank          ;printable?
-         bcc .0000020          ;no
+         bcc @0000020          ;no
 ;
          cmp #a_del
-         bcc .0000030          ;is printable
+         bcc @0000030          ;is printable
 ;
-.0000020 lda #memsubch         ;substitute character
+@0000020 lda #memsubch         ;substitute character
 ;
-.0000030 sta ibuffer,x         ;save char
+@0000030 sta ibuffer,x         ;save char
          inx                   ;bump index
          dey                   ;byte count -= 1
-         bne .0000010          ;not done
+         bne @0000010          ;not done
 ;
          stz ibuffer,x         ;terminate ASCII string
          lda #memsepch
@@ -2570,15 +2570,15 @@ dpypbr   lda reg_pbx           ;PB
 ;	-----------------------------------------------------------------------
 ;
 multspc  txa
-         bne .0000010          ;blank count specified
+         bne @0000010          ;blank count specified
 ;
          inx                   ;default to 1 blank
 ;
-.0000010 lda #a_blank
+@0000010 lda #a_blank
 ;
-.0000020 jsr putcha
+@0000020 jsr putcha
          dex
-         bne .0000020
+         bne @0000020
 ;
          rts
 ;
@@ -2656,16 +2656,16 @@ sprint   sep #m_seta           ;8 bit accumulator
          ldy !#0
          clc                   ;no initial error
 ;
-.0000010 lda (.src,s),y        ;get a byte
-         beq .0000020          ;done
+@0000010 lda (.src,s),y        ;get a byte
+         beq @0000020          ;done
 ;
          jsr putcha            ;write to console port
          iny
-         bpl .0000010          ;next
+         bpl @0000010          ;next
 ;
          sec                   ;string too long
 ;
-.0000020 plx                   ;pull RTS address
+@0000020 plx                   ;pull RTS address
          ply                   ;clear string pointer
          phx                   ;replace RTS
          sep #m_setx
@@ -2707,28 +2707,28 @@ ascbin   sep #m_setr
 ;	process radix if present...
 ;
          jsr getcharw          ;get next non-WS char
-         bne .0000010          ;got something
+         bne @0000010          ;got something
 ;
          clc                   ;no more input
          rts
 ;
-.0000010 ldx #n_radix-1        ;number of radices
+@0000010 ldx #n_radix-1        ;number of radices
 ;
-.0000020 cmp radxtab,x         ;recognized radix?
-         beq .0000030          ;yes
+@0000020 cmp radxtab,x         ;recognized radix?
+         beq @0000030          ;yes
 ;
          dex
-         bpl .0000020          ;try next
+         bpl @0000020          ;try next
 ;
          dec ibufidx           ;reposition to previous char
          inx                   ;not recognized, assume hex
 ;
-.0000030 cmp #c_dec            ;decimal radix?
-         bne .0000040          ;not decimal
+@0000030 cmp #c_dec            ;decimal radix?
+         bne @0000040          ;not decimal
 ;
          ror radix             ;flag decimal conversion
 ;
-.0000040 lda basetab,x         ;number bases table
+@0000040 lda basetab,x         ;number bases table
          sta range             ;set valid numeral range
          lda bitsdtab,x        ;get bits per digit
          sta bitsdig           ;store
@@ -2757,7 +2757,7 @@ ascbin01 jsr getchar           ;get next char
          sta numeral           ;save processed numeral
          inc charcnt           ;bump numeral count
          bit radix             ;working in base 10?
-         bpl .0000030          ;no
+         bpl @0000030          ;no
 ;
 ;
 ;	compute N*2 for decimal conversion...
@@ -2767,14 +2767,14 @@ ascbin01 jsr getchar           ;get next char
          rep #m_seta
          clc
 ;
-.0000020 lda faca,x            ;N
+@0000020 lda faca,x            ;N
          rol                   ;N=N*2
          sta facb,x
 	.rept s_word
          inx
 	.endr
          dey
-         bne .0000020
+         bne @0000020
 ;
          bcs ascbin04          ;overflow — error
 ;
@@ -2784,15 +2784,15 @@ ascbin01 jsr getchar           ;get next char
 ;	compute N × base for binary, octal or hex,
 ;	or N × 8 for decimal...
 ;
-.0000030 ldx bitsdig           ;bits per digit
+@0000030 ldx bitsdig           ;bits per digit
          rep #m_seta           ;16-bit shifts
 ;
-.0000040 asl faca
+@0000040 asl faca
          rol faca+s_word
          bcs ascbin04          ;overflow — error
 ;
          dex
-         bne .0000040          ;next shift
+         bne @0000040          ;next shift
 ;
          sep #m_seta           ;back to 8 bits
          bit radix             ;check base
@@ -2804,14 +2804,14 @@ ascbin01 jsr getchar           ;get next char
          ldy #s_pfac
          rep #m_seta
 ;
-.0000050 lda faca,x            ;N × 8
+@0000050 lda faca,x            ;N × 8
          adc facb,x            ;N × 2
          sta faca,x            ;now N × 10
 	.rept s_word
          inx
 	.endr
          dey
-         bne .0000050
+         bne @0000050
 ;
          bcs ascbin04          ;overflow — error
 ;
@@ -2826,12 +2826,12 @@ ascbin02 lda faca              ;N
          ldx #1
          ldy #s_pfac-1
 ;
-.0000010 lda faca,x
+@0000010 lda faca,x
          adc #0                ;account for carry
          sta faca,x
          inx
          dey
-         bne .0000010
+         bne @0000010
 ;
          bcc ascbin01          ;next if no overflow
 ;
@@ -2896,53 +2896,53 @@ binasc   stz ibufidx           ;initialize string index
          lsr                   ;extract radix character
          ldx #n_radix-1        ;total radices
 ;
-.0000010 cmp radxtab,x         ;recognized radix?
-         beq .0000020          ;yes
+@0000010 cmp radxtab,x         ;recognized radix?
+         beq @0000020          ;yes
 ;
          dex
-         bpl .0000010          ;try next
+         bpl @0000010          ;try next
 ;
          inx                   ;assume hex
 ;
-.0000020 stx radix             ;save radix index for later
+@0000020 stx radix             ;save radix index for later
          bit instsize
-         bmi .0000030          ;no radix symbol wanted
+         bmi @0000030          ;no radix symbol wanted
 ;
          lda radxtab,x         ;radix table
          sta ibuffer           ;prepend to string
          inc ibufidx           ;bump string index
 ;
-.0000030 cmp #c_dec            ;converting to decimal?
-         bne .0000040          ;no
+@0000030 cmp #c_dec            ;converting to decimal?
+         bne @0000040          ;no
 ;
          jsr facabcd           ;convert operand to BCD
          lda #0
-         bra .0000070          ;skip binary stuff
+         bra @0000070          ;skip binary stuff
 ;
 ;
 ;	prepare for binary, octal or hex conversion...
 ;
-.0000040 ldx #0                ;operand index
+@0000040 ldx #0                ;operand index
          ldy #s_sfac-1         ;workspace index
 ;
-.0000050 lda faca,x            ;copy operand to...
+@0000050 lda faca,x            ;copy operand to...
          sta facb,y            ;workspace in...
          dey                   ;big-endian order
          inx
          cpx #s_pfac
-         bne .0000050
+         bne @0000050
 ;
          lda #0
          tyx
 ;
-.0000060 sta facb,x            ;pad workspace
+@0000060 sta facb,x            ;pad workspace
          dex
-         bpl .0000060
+         bpl @0000060
 ;
 ;
 ;	set up conversion parameters...
 ;
-.0000070 sta facc              ;initialize byte counter
+@0000070 sta facc              ;initialize byte counter
          ldy radix             ;radix index
          lda numstab,y         ;numerals in string
          sta facc+s_byte       ;set remaining numeral count
@@ -2954,43 +2954,43 @@ binasc   stz ibufidx           ;initialize string index
 ;
 ;	generate conversion string...
 ;
-.0000080 lda #0
+@0000080 lda #0
          ldy facc+s_word       ;bits per numeral
 ;
-.0000090 ldx #s_sfac-1         ;workspace size
+@0000090 ldx #s_sfac-1         ;workspace size
          clc                   ;avoid starting carry
 ;
-.0000100 rol facb,x            ;shift out a bit...
+@0000100 rol facb,x            ;shift out a bit...
          dex                   ;from the operand or...
-         bpl .0000100          ;BCD conversion result
+         bpl @0000100          ;BCD conversion result
 ;
          rol                   ;bit to .A
          dey
-         bne .0000090          ;more bits to grab
+         bne @0000090          ;more bits to grab
 ;
          tay                   ;if numeral isn't zero...
-         bne .0000110          ;skip leading zero tests
+         bne @0000110          ;skip leading zero tests
 ;
          ldx facc+s_byte       ;remaining numerals
          cpx facc+s_xword      ;leading zero threshold
-         bcc .0000110          ;below it, must convert
+         bcc @0000110          ;below it, must convert
 ;
          ldx facc              ;processed byte count
-         beq .0000130          ;discard leading zero
+         beq @0000130          ;discard leading zero
 ;
-.0000110 cmp #10               ;check range
-         bcc .0000120          ;is 0-9
+@0000110 cmp #10               ;check range
+         bcc @0000120          ;is 0-9
 ;
          adc #a_hexdec         ;apply hex adjust
 ;
-.0000120 adc #'0'              ;change to ASCII
+@0000120 adc #'0'              ;change to ASCII
          ldy ibufidx           ;string index
          sta ibuffer,y         ;save numeral in buffer
          inc ibufidx           ;next buffer position
          inc facc              ;bytes=bytes+1
 ;
-.0000130 dec facc+s_byte       ;numerals=numerals-1
-         bne .0000080          ;not done
+@0000130 dec facc+s_byte       ;numerals=numerals-1
+         bne @0000080          ;not done
 ;
 ;
 ;	terminate string & exit...
@@ -3018,19 +3018,19 @@ binasc   stz ibufidx           ;initialize string index
 binhex   jsr bintonyb          ;generate binary values
          pha                   ;save MSN
          txa
-         jsr .0000010          ;generate ASCII LSN
+         jsr @0000010          ;generate ASCII LSN
          tax                   ;save
          pla                   ;get input
 ;
 ;
 ;	convert nybble to hex ASCII equivalent...
 ;
-.0000010 cmp #10
-         bcc .0000020          ;in decimal range
+@0000010 cmp #10
+         bcc @0000020          ;in decimal range
 ;
          adc #k_hex            ;hex compensate
 ;         
-.0000020 eor #'0'              ;finalize nybble
+@0000020 eor #'0'              ;finalize nybble
          rts                   ;done
 ;
 ;===============================================================================
@@ -3061,62 +3061,62 @@ clrfacb  php
 ;
 facabcd  ldx #s_pfac-1         ;primary accumulator size -1
 ;
-.0000010 lda faca,x            ;value to be converted
+@0000010 lda faca,x            ;value to be converted
          pha                   ;preserve
          dex
-         bpl .0000010          ;next
+         bpl @0000010          ;next
 ;
          ldx #s_sfac-1         ;workspace size
 ;
-.0000020 stz facb,x            ;clear final result
+@0000020 stz facb,x            ;clear final result
          stz facc,x            ;clear scratchpad
          dex
-         bpl .0000020
+         bpl @0000020
 ;
          inc facc+s_sfac-s_byte
          sed                   ;select decimal mode
          ldy #m_bits-1         ;bits to convert -1
 ;
-.0000030 ldx #s_pfac-1         ;operand size
+@0000030 ldx #s_pfac-1         ;operand size
          clc                   ;no carry at start
 ;
-.0000040 ror faca,x            ;grab LS bit in operand
+@0000040 ror faca,x            ;grab LS bit in operand
          dex
-         bpl .0000040
+         bpl @0000040
 ;
-         bcc .0000060          ;LS bit clear
+         bcc @0000060          ;LS bit clear
 ;
          clc
          ldx #s_sfac-1
 ;
-.0000050 lda facb,x            ;partial result
+@0000050 lda facb,x            ;partial result
          adc facc,x            ;scratchpad
          sta facb,x            ;new partial result
          dex
-         bpl .0000050
+         bpl @0000050
 ;
          clc
 ;
-.0000060 ldx #s_sfac-1
+@0000060 ldx #s_sfac-1
 ;
-.0000070 lda facc,x            ;scratchpad
+@0000070 lda facc,x            ;scratchpad
          adc facc,x            ;double &...
          sta facc,x            ;save
          dex
-         bpl .0000070
+         bpl @0000070
 ;
          dey
-         bpl .0000030          ;next operand bit
+         bpl @0000030          ;next operand bit
 ;
          cld
          ldx #0
          ldy #s_pfac
 ;
-.0000080 pla                   ;operand
+@0000080 pla                   ;operand
          sta faca,x            ;restore
          inx
          dey
-         bne .0000080          ;next
+         bne @0000080          ;next
 ;
          rts
 ;
@@ -3127,17 +3127,17 @@ facabcd  ldx #s_pfac-1         ;primary accumulator size -1
 nybtobin jsr toupper           ;convert case if necessary
          sec
          sbc #'0'              ;change to binary
-         bcc .0000020          ;not a numeral — error
+         bcc @0000020          ;not a numeral — error
 ;
          cmp #10
-         bcc .0000010          ;numeral is 0-9
+         bcc @0000010          ;numeral is 0-9
 ;
          sbc #a_hexdec+1       ;10-15 ——> A-F
          clc                   ;no conversion error
 ;
-.0000010 rts
+@0000010 rts
 ;
-.0000020 sec                   ;conversion error
+@0000020 sec                   ;conversion error
          rts
 ;
 ;===============================================================================
@@ -3163,9 +3163,9 @@ calccnt  jsr clrfacb           ;clear accumulator
 clroper  phx
          ldx #s_oper-1
 ;
-.0000010 stz operand,x
+@0000010 stz operand,x
          dex
-         bpl .0000010
+         bpl @0000010
 ;
          stz eopsize
          plx
@@ -3196,10 +3196,10 @@ cpsup    pha                   ;save banks
          sep #m_seta
          ldx !#cpcodeee-cpcode-1
 ;
-.0000010 lda \3cpcode,x        ;transfer copy code to...
+@0000010 lda \3cpcode,x        ;transfer copy code to...
          sta mcftwork,x        ;to workspace
          dex
-         bpl .0000010
+         bpl @0000010
 ;
          xba                   ;recover opcode &...
          sta mcftopc           ;set it
@@ -3227,7 +3227,7 @@ decdcnt  rep #m_seta
          and !#%11111111       ;squelch noise in .B
          sec
          ora facb              ;count LSW
-         beq .0000020          ;zero, just exit
+         beq @0000020          ;zero, just exit
 ;
          lda facb
          sbc charcnt           ;bytes processed
@@ -3235,15 +3235,15 @@ decdcnt  rep #m_seta
          sep #m_seta
          lda facb+s_word
          sbc #0                ;handle borrow
-         bcc .0000010          ;underflow
+         bcc @0000010          ;underflow
 ;
          sta facb+s_word
          clc                   ;count > 0
          rts
 ;
-.0000010 sec
+@0000010 sec
 ;
-.0000020 sep #m_seta
+@0000020 sep #m_seta
          rts
 ;
 ;===============================================================================
@@ -3252,25 +3252,25 @@ decdcnt  rep #m_seta
 ;
 enddest  jsr facasize          ;check start...
          cmp #s_dword          ;for range
-         bcs .0000010          ;out of range — error
+         bcs @0000010          ;out of range — error
 ;
          jsr facaddra          ;store start
          jsr getparm           ;get end
-         bcs .0000010          ;not entered — error
+         bcs @0000010          ;not entered — error
 ;
          jsr facasize          ;check end...
          cmp #s_dword          ;for range
-         bcs .0000010          ;out of range — error
+         bcs @0000010          ;out of range — error
 ;
          jsr facaddrb          ;store end
          jsr getparm           ;get destination
-         bcs .0000010          ;not entered — error
+         bcs @0000010          ;not entered — error
 ;
          jsr facasize          ;check destination...
          cmp #s_dword          ;for range
          bcc facaoper          ;store dest address
 ;
-.0000010 rts                   ;exit w/error
+@0000010 rts                   ;exit w/error
 ;
 ;===============================================================================
 ;
@@ -3278,10 +3278,10 @@ enddest  jsr facasize          ;check start...
 ;
 facaddra ldx #s_xword-1
 ;
-.0000010 lda faca,x
+@0000010 lda faca,x
          sta addra,x
          dex
-         bpl .0000010
+         bpl @0000010
 ;
          rts
 ;
@@ -3291,10 +3291,10 @@ facaddra ldx #s_xword-1
 ;
 facaddrb ldx #s_xword-1
 ;
-.0000010 lda faca,x
+@0000010 lda faca,x
          sta addrb,x
          dex
-         bpl .0000010
+         bpl @0000010
 ;
          rts
 ;
@@ -3304,10 +3304,10 @@ facaddrb ldx #s_xword-1
 ;
 facaoper ldx #s_oper-1
 ;
-.0000010 lda faca,x
+@0000010 lda faca,x
          sta operand,x
          dex
-         bpl .0000010
+         bpl @0000010
 ;
          rts
 ;
@@ -3330,13 +3330,13 @@ facaoper ldx #s_oper-1
 facasize sep #m_setr
          ldx #s_dword-1
 ;
-.0000010 lda faca,x            ;get byte
-         bne .0000020          ;done
+@0000010 lda faca,x            ;get byte
+         bne @0000020          ;done
 ;
          dex
-         bne .0000010          ;next byte
+         bne @0000010          ;next byte
 ;
-.0000020 inx                   ;count=index+1
+@0000020 inx                   ;count=index+1
          txa
          rts
 ;
@@ -3357,32 +3357,32 @@ getparmr dec ibufidx           ;reread previous char
 ;
 getparm  phy                   ;preserve
          jsr ascbin            ;convert parameter to binary
-         bcs .0000040          ;conversion error
+         bcs @0000040          ;conversion error
 ;
          jsr getcharr          ;reread last char
-         bne .0000010          ;not end-of-input
+         bne @0000010          ;not end-of-input
 ;
          dec ibufidx           ;reindex to terminator
          lda charcnt           ;get chars processed so far
-         beq .0000030          ;none
+         beq @0000030          ;none
 ;
-         bne .0000020          ;some
+         bne @0000020          ;some
 ;
-.0000010 cmp #a_blank          ;recognized delimiter
-         beq .0000020          ;end of parameter
+@0000010 cmp #a_blank          ;recognized delimiter
+         beq @0000020          ;end of parameter
 ;
          cmp #','              ;recognized delimiter
-         bne .0000040          ;unknown delimter
+         bne @0000040          ;unknown delimter
 ;
-.0000020 clc
+@0000020 clc
          .byte bitzp           ;skip SEC below
 ;
-.0000030 sec
+@0000030 sec
          ply                   ;restore
          lda charcnt           ;get count
          rts                   ;done
 ;
-.0000040	.rept 3               ;clean up stack
+@0000040	.rept 3               ;clean up stack
          pla
 	.endr
          jmp monerr            ;abort w/error
@@ -3416,7 +3416,7 @@ nxtaddra sep #m_seta
          cmp addrb+s_word
          bcc incaddra          ;increment
 ;
-         bne .0000010          ;don't increment
+         bne @0000010          ;don't increment
 ;
          rep #m_seta
          lda addra             ;bits 0-15
@@ -3424,7 +3424,7 @@ nxtaddra sep #m_seta
          sep #m_seta
          bcc incaddra          ;increment
 ;
-.0000010 rts
+@0000010 rts
 ;
 ;===============================================================================
 ;
@@ -3454,12 +3454,12 @@ getbyte  lda [addra]           ;get a byte
 incaddra php
          rep #m_seta
          inc addra             ;bump bits 0-15
-         bne .0000010
+         bne @0000010
 ;
          sep #m_seta
          inc addra+s_word      ;bump bits 16-23
 ;
-.0000010 plp
+@0000010 plp
          rts
 ;
 ;===============================================================================
@@ -3471,13 +3471,13 @@ incoper  clc
          rep #m_setr
          pha
          inc operand           ;handle base address
-         bne .0000010
+         bne @0000010
 ;              
          sep #m_seta
          inc operand+s_word    ;handle bank
          rep #m_seta
 ;
-.0000010 pla
+@0000010 pla
          plp
          rts
 ;
@@ -3528,16 +3528,16 @@ offtarg  rep #m_seta
          lda addra             ;base address
          sep #m_seta
          lsr instsize          ;bit 0 will be set if...
-         bcs .0000010          ;a long branch
+         bcs @0000010          ;a long branch
 ;
          bit operand           ;short forward or backward?
-         bpl .0000010          ;forward
+         bpl @0000010          ;forward
 ;
          xba                   ;expose address MSB
          dec                   ;back a page
          xba                   ;expose address LSB
 ;
-.0000010 rep #m_seta
+@0000010 rep #m_seta
          clc
          adc operand           ;calculate target address
          sta operand           ;new operand
@@ -3550,11 +3550,11 @@ offtarg  rep #m_seta
 ;
 ;setxaddr: SET EXECUTION ADDRESS
 ;
-setxaddr bcs .0000010          ;no address given
+setxaddr bcs @0000010          ;no address given
 ;
          jsr facasize          ;check address...
          cmp #s_dword          ;range
-         bcs .0000020          ;out of range
+         bcs @0000020          ;out of range
 ;
          rep #m_seta
          lda faca              ;execution address
@@ -3563,9 +3563,9 @@ setxaddr bcs .0000010          ;no address given
          lda faca+s_word
          sta reg_pbx           ;set new PB value
 ;
-.0000010 clc                   ;no error
+@0000010 clc                   ;no error
 ;
-.0000020 rts
+@0000020 rts
 ;
 ;===============================================================================
 ;
@@ -3605,45 +3605,45 @@ targoff  ;this line intentionally has no code
          sta operand           ;proposed offset
          sep #m_seta           ;8-bit accumulator
          bit .btype            ;check branch range
-         bmi .0000030          ;long
+         bmi @0000030          ;long
 ;
-         bcc .0000020          ;short backward branch
+         bcc @0000020          ;short backward branch
 ;
 ;
 ;	process short forward branch...
 ;
          xba                   ;offset MSB should be zero
-         bne .0000040          ;it isn't — out of range
+         bne @0000040          ;it isn't — out of range
 ;
          xba                   ;offset LSB should be $00-$7F
-         bmi .0000040          ;it isn't — out of range
+         bmi @0000040          ;it isn't — out of range
 ;
-.0000010 lda #s_byte           ;final instruction size
+@0000010 lda #s_byte           ;final instruction size
          clc                   ;branch in range
          rts
 ;
 ;
 ;	process short backward branch...
 ;
-.0000020 xba                   ;offset MSB should be negative
-         bpl .0000040          ;it isn't — out of range
+@0000020 xba                   ;offset MSB should be negative
+         bpl @0000040          ;it isn't — out of range
 ;
          eor #%11111111        ;complement offset MSB 2s 
-         bne .0000040          ;out of range
+         bne @0000040          ;out of range
 ;
          xba                   ;offset LSB should be $80-$FF
-         bmi .0000010          ;it is — branch in range
+         bmi @0000010          ;it is — branch in range
 ;
-         bra .0000040          ;branch out of range
+         bra @0000040          ;branch out of range
 ;
 ;
 ;	process long forward branch...
 ;
-.0000030 lda #s_word           ;final instruction size
+@0000030 lda #s_word           ;final instruction size
          clc                   ;never a range error
          rts
 
-.0000040 sec                   ;range error
+@0000040 sec                   ;range error
          rts
 ;
 ;===============================================================================
@@ -3714,46 +3714,46 @@ getchar  phx
 getpat   stz status            ;clear pattern type indicator
          ldy #0                ;pattern index
          jsr getcharr          ;get last char
-         beq .0000070          ;EOS
+         beq @0000070          ;EOS
 ;
          ldx ibufidx           ;current buffer index
          jsr getcharw          ;get next
-         beq .0000070          ;EOS
+         beq @0000070          ;EOS
 ;
          cmp #'''
-         bne .0000010          ;not ASCII input
+         bne @0000010          ;not ASCII input
 ;
          ror status            ;condition flag
-         bra .0000030          ;balance of input is ASCII
+         bra @0000030          ;balance of input is ASCII
 ;
-.0000010 stx ibufidx           ;restore buffer index
+@0000010 stx ibufidx           ;restore buffer index
 ;
-.0000020 jsr getparm           ;evaluate numeric pattern
-         bcs .0000060          ;done w/pattern
+@0000020 jsr getparm           ;evaluate numeric pattern
+         bcs @0000060          ;done w/pattern
 ;
          jsr facasize          ;size
          cmp #s_word
-         bcs .0000070          ;not a byte — error
+         bcs @0000070          ;not a byte — error
 ;
          lda faca              ;get byte &...
-         bra .0000040          ;store
+         bra @0000040          ;store
 ;
-.0000030 jsr getchar           ;get ASCII char
-         beq .0000060          ;done w/pattern
+@0000030 jsr getchar           ;get ASCII char
+         beq @0000060          ;done w/pattern
 ;
-.0000040 cpy #s_auxbuf         ;pattern buffer full?
-         beq .0000050          ;yes
+@0000040 cpy #s_auxbuf         ;pattern buffer full?
+         beq @0000050          ;yes
 ;
          sta auxbuf,y          ;store pattern
          iny
          bit status
-         bpl .0000020          ;get next numeric value
+         bpl @0000020          ;get next numeric value
 ;
-         bra .0000030          ;get next ASCII char
+         bra @0000030          ;get next ASCII char
 ;
-.0000050 jsr alert             ;excess input
+@0000050 jsr alert             ;excess input
 ;
-.0000060 sty auxbufix          ;save pattern size
+@0000060 sty auxbufix          ;save pattern size
          tya                   ;condition .Z
          clc                   ;pattern valid
          rts
@@ -3761,14 +3761,14 @@ getpat   stz status            ;clear pattern type indicator
 ;
 ;	no pattern entered...
 ;
-.0000070 rep #%10000000
+@0000070 rep #%10000000
          sec
          rts
 ;
 ;
 ;	evaluation error...
 ;
-.0000080 sep #%10000001
+@0000080 sep #%10000001
          rts
 ;
 ;===============================================================================
@@ -3788,7 +3788,7 @@ getpat   stz status            ;clear pattern type indicator
 ;	-----------------------------------------------------------------------
 ;
 getcharw jsr getchar           ;get from buffer
-         beq .0000010          ;EOI
+         beq @0000010          ;EOI
 ;
          cmp #a_blank
          beq getcharw          ;discard whitespace
@@ -3796,7 +3796,7 @@ getcharw jsr getchar           ;get from buffer
          cmp #a_ht             ;also whitespace
          beq getcharw
 ;
-.0000010 clc
+@0000010 clc
          rts  
 ;
 ;===============================================================================
@@ -3829,39 +3829,39 @@ input    ldx ibufidx
 ;
 ;	main input loop...
 ;
-.0000010 jsr getcha            ;poll for input
-         bcs .0000060          ;nothing
+@0000010 jsr getcha            ;poll for input
+         bcs @0000060          ;nothing
 ;
          cmp #a_del            ;above ASCII range?
-         bcs .0000030          ;yes, not allowed
+         bcs @0000030          ;yes, not allowed
 ;
          cmp #a_ht             ;horizontal tab?
-         bne .0000020          ;no
+         bne @0000020          ;no
 ;
          lda #a_blank          ;replace <HT> w/blank
 ;
-.0000020 cmp #a_blank          ;control char?
-         bcc .0000040          ;yes
+@0000020 cmp #a_blank          ;control char?
+         bcc @0000040          ;yes
 ;
 ;
 ;	process QWERTY character...
 ;
          cpx #s_ibuf           ;room in buffer?
-         bcs .0000030          ;no
+         bcs @0000030          ;no
 ;
          sta ibuffer,x         ;store char
          inx                   ;bump index
          .byte bitabs          ;echo char
 ;
-.0000030 lda #a_bel            ;alert user
+@0000030 lda #a_bel            ;alert user
          jsr putcha
-         bra .0000010          ;get some more
+         bra @0000010          ;get some more
 ;
 ;
 ;	process carriage return...
 ;
-.0000040 cmp #a_cr             ;carriage return?
-         bne .0000050          ;no
+@0000040 cmp #a_cr             ;carriage return?
+         bne @0000050          ;no
 ;
          phx                   ;protect input count
          pea #dc_co
@@ -3874,23 +3874,23 @@ input    ldx ibufidx
 ;
 ;	process backspace...
 ;
-.0000050 cmp #a_bs             ;backspace?
-         bne .0000010          ;no
+@0000050 cmp #a_bs             ;backspace?
+         bne @0000010          ;no
 ;
          txa
-         beq .0000010          ;no input, ignore <BS>
+         beq @0000010          ;no input, ignore <BS>
 ;
          dex                   ;1 less char
          phx                   ;preserve count
          jsr gendbs            ;destructive backspace
          plx                   ;restore count
-         bra .0000010          ;get more input
+         bra @0000010          ;get more input
 ;
 ;
 ;	waiting loop...
 ;
-.0000060 wai                   ;wait for datum
-         bra .0000010
+@0000060 wai                   ;wait for datum
+         bra @0000010
 ;
 ;===============================================================================
 ;
@@ -3937,14 +3937,14 @@ getcharc jsr getchar           ;get from buffer
 ;
 toupper  php                   ;protect flags
          cmp #a_asclcl         ;check char range
-         bcc .0000010          ;not LC alpha
+         bcc @0000010          ;not LC alpha
 ;
          cmp #a_asclch+s_byte
-         bcs .0000010          ;not LC alpha
+         bcs @0000010          ;not LC alpha
 ;
          and #a_lctouc         ;force to UC
 ;
-.0000010 plp                   ;restore flags
+@0000010 plp                   ;restore flags
 ;
 touppera rts
 ;
@@ -3973,14 +3973,14 @@ touppera rts
 ;	-----------------------------------------------------------------------
 ;
 teststop jsr getcha            ;poll console
-         bcs .0000010          ;no input
+         bcs @0000010          ;no input
 ;
          cmp #stopkey          ;stop key pressed?
-         beq .0000020          ;yes
+         beq @0000020          ;yes
 ;
-.0000010 clc
+@0000010 clc
 ;
-.0000020 rts
+@0000020 rts
 ;
 ;===============================================================================
 ;
