@@ -18,7 +18,7 @@ _origin_ =$001000              ;assembly address...
 ;       =======================================================================
 ;
 ;       =======================================================================
-vecexit  =$00b3ff              ;exit to environment address...
+upvecexit  =$00b3ff              ;exit to environment address...
 ;
 ;       Set VECEXIT to where Supermon 816 should go when it exits.  Supermon 816
 ;       will do a JML (long jump) to this address, which means VECEXIT must be a
@@ -120,9 +120,143 @@ auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;       =======================================================================
 
 
+INTVEC816	=$ffee
+BRKVEC816	=$ffe6
 
+start	clc		; go into native mode
+	xce
 
+        sep #m_seta           ;16-bit .A
+        .as
+	rep #m_setx
+	.xl
 
+	; make ROM writable
+	lda $e801
+	and #%01111111
+	sta $e801
+
+	; set native int vector (overwrites SCRORG to get w/h of screen)
+	ldx #int816
+	stx INTVEC816
+
+	ora #%10000000
+	sta $e801
+	
+	rep #m_seta
+	.al
+
+:	nop
+	jmp :-
+
+	; set BRK vector
+;         lda vecbrki           ;BRK vector
+;         cmp #!JMONBRK         ;pointing at monitor?
+;         beq monreg            ;yes, ignore cold start
+
+;         sta vecbrkia          ;save vector for exit
+;         lda #!JMONBRK         ;Supermon 816 intercepts...
+;         sta vecbrki           ;BRK handler
+
+	; set direct register
+	lda #$0100
+	tcd
+
+         sep #m_setr           ;8 bit registers
+        .xs
+        .as
+	jmp monentry
+	
+
+vecexit	
+	rep #m_seta
+	.al
+
+	; reset direct register
+	lda #0
+	tcd
+
+	; reset BRK vector
+;         lda vecbrki           ;BRK indirect vector
+;         cmp #!JMONBRK         ;we intercept it?
+;         bne @0000010          ;no, don't change it
+;
+;         lda vecbrkia          ;old vector
+;         sta vecbrki           ;restore it
+;         stz vecbrkia          ;invalidate old vector
+	
+	; 
+	jmp upvecexit
+
+	.xs
+	.as
+
+; ------------------------------------------------------
+; native mode interrupt
+;
+; this interrupt needs to switch back to emu mode and DP=0
+; note: starts in native mode of course
+;
+
+int816	
+	; 16 bit a and x/y
+	rep #m_setr
+	.al
+	.xl
+
+	; save registers
+	pha
+	phx
+	phy
+
+	; clear registers
+	lda #0
+	tax
+	tay
+	; reset direct register
+	tcd
+
+	; 8 bit registers (is this needed before going to emu mode?)	
+	sep #m_setr
+	.xs
+	.as
+
+	; emu mode
+	clc 
+	xce
+
+	; system interrupt
+	; todo: flash cursor
+	jsr $ffea		; update time
+	jsr $e4be		; scan keyboard
+
+	; native mode
+	sec
+	xce
+
+	; 16 bit registers
+	rep #m_setr
+	.al
+	.xl
+
+	; set DR again
+	lda #$0100
+	tcd
+
+	; restore registers
+	ply
+	plx
+	pla
+
+	; return, restore SR
+	rti
+
+; ------------------------------------------------------
 
 #include "supermon816.a65"
 
+; ------------------------------------------------------
+
+;vecbrka	.word 0
+;vecinta	.word 0
+	

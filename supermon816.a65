@@ -981,27 +981,28 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;
          ;*=_origin_
 ;
-JMON     bra mon               ;cold start entry
-JMONBRK  bra monbrk            ;software interrupt intercept
+;JMON     bra mon               ;cold start entry
+;JMONBRK  bra monbrk            ;software interrupt intercept
 ;
-vecbrkia .word 0               ;system indirect BRK vector
+;vecbrkia .word 0               ;system indirect BRK vector
 ;
 ;===============================================================================
 ;
 ;mon: SUPERMON 816 COLD START
 ;
-mon      rep #m_seta           ;16-bit .A
-	.al
-         lda vecbrki           ;BRK vector
-         cmp #!JMONBRK         ;pointing at monitor?
-         beq monreg            ;yes, ignore cold start
-;
-         sta vecbrkia          ;save vector for exit
-         lda #!JMONBRK         ;Supermon 816 intercepts...
-         sta vecbrki           ;BRK handler
-         sep #m_setr           ;8 bit registers
-	.xs
-	.as
+;mon      rep #m_seta           ;16-bit .A
+;	.al
+;         lda vecbrki           ;BRK vector
+;         cmp #!JMONBRK         ;pointing at monitor?
+;         beq monreg            ;yes, ignore cold start
+;;
+;         sta vecbrkia          ;save vector for exit
+;         lda #!JMONBRK         ;Supermon 816 intercepts...
+;         sta vecbrki           ;BRK handler
+;         sep #m_setr           ;8 bit registers
+;	.xs
+;	.as
+monentry
          ldx #vopsflag-reg_pbx
 ;
 @0000010 stz reg_pbx,x         ;clear DP storage
@@ -2210,22 +2211,6 @@ monchr   bcs @0000040          ;dump registers & quit
 ;	-----------------------------------------------------------------------
 ;
 monxit   bcc @0000020          ;no parameters allowed
-;
-         rep #m_seta
-	.al
-         lda vecbrki           ;BRK indirect vector
-         cmp #!JMONBRK         ;we intercept it?
-         bne @0000010          ;no, don't change it
-;
-         lda vecbrkia          ;old vector
-         sta vecbrki           ;restore it
-         stz vecbrkia          ;invalidate old vector
-;         
-@0000010 sep #m_setr
-	.xs
-	.as
-         ;jml vecexit           ;long jump to exit
-	; TODO: 24-bit
          jmp vecexit           ;long jump to exit
 ;
 @0000020 jmp monerr            ;goto error handler
