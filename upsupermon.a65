@@ -8,10 +8,8 @@
 ;       =======================================================================
 ;
 ;       =======================================================================
-_origin_ =$001000              ;assembly address...
 
-	.word _origin_
-	;*=_origin_
+	.word *+2
 
 ;
 ;       Set _ORIGIN_ to Supermon 816's desired assembly address.
@@ -52,7 +50,7 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 ;
 ;
 ;       =======================================================================
-hwstack  =$0000ff              ;top of hardware stack...
+hwstack  =$0001ff              ;top of hardware stack...
 ;
 ;       Supermon 816 initializes the stack pointer to this address when the cold
 ;       start at JMON is called to enter the monitor.  The stack pointer will be
@@ -132,8 +130,9 @@ start	clc		; go into native mode
 	.xl
 
 	; make ROM writable
-	lda $e801
-	and #%01111111
+;	lda $e801
+;	and #%01111111
+	lda #0
 	sta $e801
 
 	; set native int vector (overwrites SCRORG to get w/h of screen)
@@ -145,9 +144,6 @@ start	clc		; go into native mode
 	
 	rep #m_seta
 	.al
-
-:	nop
-	jmp :-
 
 	; set BRK vector
 ;         lda vecbrki           ;BRK vector
@@ -165,6 +161,7 @@ start	clc		; go into native mode
          sep #m_setr           ;8 bit registers
         .xs
         .as
+
 	jmp monentry
 	
 
@@ -216,13 +213,14 @@ int816
 	; reset direct register
 	tcd
 
-	; 8 bit registers (is this needed before going to emu mode?)	
-	sep #m_setr
+	; 8 bit registers
+	; not needed for emu mode
+;	sep #m_setr
 	.xs
 	.as
 
-	; emu mode
-	clc 
+	; emu mode (auto sets X and M)
+	sec 
 	xce
 
 	; system interrupt
@@ -231,7 +229,7 @@ int816
 	jsr $e4be		; scan keyboard
 
 	; native mode
-	sec
+	clc
 	xce
 
 	; 16 bit registers

@@ -1000,8 +1000,8 @@ mcftbnk  =mcftopc+s_byte       ;banks
 ;         lda #!JMONBRK         ;Supermon 816 intercepts...
 ;         sta vecbrki           ;BRK handler
 ;         sep #m_setr           ;8 bit registers
-;	.xs
-;	.as
+	.xs
+	.as
 monentry
          ldx #vopsflag-reg_pbx
 ;
