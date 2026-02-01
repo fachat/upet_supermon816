@@ -4,8 +4,18 @@
 This repo contains an adaption of the supermon816 by BDD from the 6502.org forum as given here http://forum.6502.org/viewtopic.php?f=2&t=8108#p108407
 Note that this is 
 
-1. using the Kowalski assembler to build, and
+1. using the xa65 assembler to build, and
 2. it is modified to leave out the S-Record loader as we don't need it here
 3. it runs in native mode, while the majority of uses in the Micro-PET is in emulation, so a small shim needs to be included.
 
+The target runtime modes of the assembler are:
+
+- call per SYS, used with the normal PET editor
+- call per SRQ key, in a separate screen that is overlayed over the normal screen
+- running in the background via serial line
+
+The assembler is loaded into the lower 32k, in a bank that is mapped
+into the CPU's bank 0 using the Micro-PET's bank mapping feature.
+This means that the bank 0 memory access in the assembler must
+be modified to access the memory in a different way.
 
