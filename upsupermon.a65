@@ -68,7 +68,7 @@ zeropage =$00                  ;Supermon 816's direct page...
 ;       =======================================================================
 ;
 ;       =======================================================================
-getcha   =$00ffff              ;get datum from TIA-232 channel A...
+;getcha   =$00ffff              ;get datum from TIA-232 channel A...
 
 ;       GETCHA refers to an operating system API call that returns a datum in
 ;       the 8 bit accumulator.  Supermon 816 assumes that GETCHA is a non-block-
@@ -82,7 +82,7 @@ getcha   =$00ffff              ;get datum from TIA-232 channel A...
 ;       =======================================================================
 ;
 ;       =======================================================================
-putcha   =$00ffff              ;print character on console...
+;putcha   =$00ffff              ;print character on console...
 ;
 ;       PUTCHA refers to an operating system API call that prints a character to
 ;       the console screen.  The character to be printed will be in .A, which
@@ -96,7 +96,7 @@ putcha   =$00ffff              ;print character on console...
 ;       =======================================================================
 ;
 ;       =======================================================================
-stopkey  =$03                  ;display abort key...
+;stopkey  =$03                  ;display abort key...
 ;
 ;       Supermon 816 will poll for a "stop key" during display operations, such
 ;       as code disassembly & memory dumps, so as to abort further processing &
@@ -117,11 +117,13 @@ auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;       control of your system they may be overwritten without consequence.
 ;       =======================================================================
 
+directpage	=$0100
 
 INTVEC816	=$ffee
 BRKVEC816	=$ffe6
 
-start	clc		; go into native mode
+start	
+	clc		; go into native mode
 	xce
 
         sep #m_seta           ;16-bit .A
@@ -155,7 +157,7 @@ start	clc		; go into native mode
 ;         sta vecbrki           ;BRK handler
 
 	; set direct register
-	lda #$0100
+	lda #directpage
 	tcd
 
          sep #m_setr           ;8 bit registers
@@ -250,6 +252,88 @@ int816
 	rti
 
 ; ------------------------------------------------------
+;
+;teststop: TEST FOR STOP KEY
+;
+;       -----------------------------------------------------------------------
+;       Preparatory Ops: none
+;        
+;       Returned Values: .A: detected keypress, if any
+;                        .X: entry value
+;                        .Y: entry value
+;
+;       MPU Flags: NVmxDIZC
+;                  ||||||||
+;                  |||||||+<97><97><97>> 0: normal key detected
+;                  |||||||      1: <STOP> detected
+;                  +++++++<97><97><97><97>> not defined
+;        
+;       Example: jsr teststop
+;                bcs stopped   
+;        
+;       Notes: The symbol STOPKEY defines the ASCII
+;              value of the "stop key."
+;       -----------------------------------------------------------------------
+
+	.as
+	.xs
+
+teststop .(
+	jsr $f335
+	bne nostp
+	sec
+	rts
+nostp	clc
+	rts
+	.)
+
+; ------------------------------------------------------
+;putcha   =$00ffff              ;print character on console...
+;        
+;       PUTCHA refers to an operating system API call that prints a character to
+;       the console screen.  The character to be printed will be in .A, which
+;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
+;       until the character can be processed.  PUTCHA will be called with a JSR
+;       instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
+;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
+;       character" routine works differently than described.
+
+
+	.as
+	.xl
+putcha	
+	rep #m_seta
+	.al
+	and #$00ff
+	pha
+	lda #0
+	tcd
+	pla
+	sep #m_setx+m_seta
+	.xs
+	.as
+	jsr $ffd2
+	rep #m_setx+m_seta
+	.xl
+	.al
+	pha
+	lda #directpage
+	tcd
+	pla
+	sep #m_seta
+	.xs
+	rts
+
+
+; ------------------------------------------------------
+
+getcha	rts
+
+; ------------------------------------------------------
+
+	.al
 
 #include "supermon816.a65"
 

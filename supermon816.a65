@@ -4101,15 +4101,15 @@ touppera rts
 ;	       value of the "stop key."
 ;	-----------------------------------------------------------------------
 ;
-teststop jsr getcha            ;poll console
-         bcs @0000010          ;no input
+;teststop jsr getcha            ;poll console
+;         bcs @0000010          ;no input
 ;
-         cmp #stopkey          ;stop key pressed?
-         beq @0000020          ;yes
+;         cmp #stopkey          ;stop key pressed?
+;         beq @0000020          ;yes
 ;
-@0000010 clc
+;@0000010 clc
 ;
-@0000020 rts
+;@0000020 rts
 ;
 ;===============================================================================
 ;
