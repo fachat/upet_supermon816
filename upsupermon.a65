@@ -9,8 +9,16 @@
 ;
 ;       =======================================================================
 
-	.word *+2
+;	.text
+;
+;	.word $0401
+;	.word link
+;	.word 10
+;	.byt $9e, "1040", 0
+;link	.word 0
+;	.dsb 1040-*,0
 
+	.word *+2
 ;
 ;       Set _ORIGIN_ to Supermon 816's desired assembly address.
 ;       =======================================================================
@@ -323,13 +331,48 @@ putcha
 	tcd
 	pla
 	sep #m_seta
-	.xs
+	.as
 	rts
 
 
 ; ------------------------------------------------------
+;       GETCHA refers to an operating system API call that returns a datum in
+;       the 8 bit accumulator.  Supermon 816 assumes that GETCHA is a non-block-
+;       ing subroutine & returns with carry clear to indicate that a datum is in
+;       .A, or with carry set to indicate that no datum was available.  GETCHA
+;       will be called with a JSR instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from GETCHA.
+;       You may have to modify Supermon 816 at all calls to GETCHA if your "get
+;       datum" routine works differently than described.
 
-getcha	rts
+	.as
+	.xl
+getcha	
+	rep #m_seta
+	.al
+	lda #0
+	tcd
+	sep #m_setx+m_seta
+	.xs
+	.as
+	jsr $ffe4
+	rep #m_setx+m_seta
+	.xl
+	.al
+	pha
+	lda #directpage
+	tcd
+	pla
+	sep #m_seta
+	.as
+	cmp #0
+	bcc none
+	clc
+	rts
+none	sec
+	rts
+
 
 ; ------------------------------------------------------
 

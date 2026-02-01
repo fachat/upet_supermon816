@@ -1098,6 +1098,7 @@ monbrk   ;pea localdp          ;operating environment's direct page
 ;	DO NOT directly call this entry point!
 ;	------------------------------------------------------------------------
 ;
+	.xl
 moncom   jsr sprint            ;print heading
          rep #m_seta
 	.al
