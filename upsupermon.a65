@@ -347,7 +347,7 @@ putcha
 ;       datum" routine works differently than described.
 
 	.as
-	.xl
+	.xs
 getcha	
 	rep #m_seta
 	.al
@@ -364,8 +364,9 @@ getcha
 	lda #directpage
 	tcd
 	pla
-	sep #m_seta
+	sep #m_seta+m_setx
 	.as
+	.xs
 	cmp #0
 	bcc none
 	clc
@@ -377,6 +378,7 @@ none	sec
 ; ------------------------------------------------------
 
 	.al
+	.xl
 
 #include "supermon816.a65"
 
