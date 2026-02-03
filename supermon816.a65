@@ -1120,6 +1120,7 @@ moncom   jsr sprint            ;print heading
 ;	syntax: R
 ;	---------
 ;
+	.xs
 monreg   bcs @0000010          ;okay to proceed
 ;
          jmp monerr            ;error if called with a parm
@@ -3376,6 +3377,7 @@ enddest  jsr facasize          ;check start...
 ;
 ;facaddra: COPY FACA TO ADDRA
 ;
+	.xs
 facaddra ldx #s_xword-1
 ;
 @0000010 lda faca,x
@@ -3391,6 +3393,7 @@ facaddra ldx #s_xword-1
 ;
 facaddrb ldx #s_xword-1
 ;
+	.xs
 @0000010 lda faca,x
          sta addrb,x
          dex
@@ -3402,6 +3405,7 @@ facaddrb ldx #s_xword-1
 ;
 ;facaoper: COPY FACA TO OPERAND
 ;
+	.xs
 facaoper ldx #s_oper-1
 ;
 @0000010 lda faca,x

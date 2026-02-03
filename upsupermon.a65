@@ -115,7 +115,7 @@ zeropage =$00                  ;Supermon 816's direct page...
 ;       which is ASCII <ESC> or [ESC].
 ;       =======================================================================
 ;
-ibuffer  =$008000              ;input buffer &...
+ibuffer  =$008800              ;input buffer &...
 auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;
 ;       =======================================================================
@@ -307,11 +307,13 @@ nostp	clc
 ;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
 ;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
 ;       character" routine works differently than described.
+;
+; NOTE: supermon816 calls this with X set or cleared, depending on location
 
 
 	.as
 	.xl
-putcha	
+putcha	php			; save processor state, incl. X/M bits
 	rep #m_seta
 	.al
 	and #$00ff
@@ -322,7 +324,11 @@ putcha
 	sep #m_setx+m_seta
 	.xs
 	.as
+	sec
+	xce			; emulation mode
 	jsr $ffd2
+	clc
+	xce			; native mode
 	rep #m_setx+m_seta
 	.xl
 	.al
@@ -330,8 +336,7 @@ putcha
 	lda #directpage
 	tcd
 	pla
-	sep #m_seta
-	.as
+	plp			; restore X/M bits
 	rts
 
 
@@ -348,7 +353,7 @@ putcha
 
 	.as
 	.xs
-getcha	
+getcha	phx
 	rep #m_seta
 	.al
 	lda #0
@@ -356,7 +361,11 @@ getcha
 	sep #m_setx+m_seta
 	.xs
 	.as
+	sec
+	xce		; emulation mode
 	jsr $ffe4
+	clc
+	xce		; native mode
 	rep #m_setx+m_seta
 	.xl
 	.al
@@ -367,7 +376,8 @@ getcha
 	sep #m_seta+m_setx
 	.as
 	.xs
-	cmp #0
+	plx
+	cmp #1
 	bcc none
 	clc
 	rts
