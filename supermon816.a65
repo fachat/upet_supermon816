@@ -1087,7 +1087,7 @@ monbrk   ;pea localdp          ;operating environment's direct page
 	.as
          pla                   ;get PB &...
          sta reg_pbx           ;store
-         cli                   ;reenable IRQs
+         ;cli                   ;reenable IRQs
          pea mm_brk           ;"*BRK"
 ;
 ;===============================================================================
@@ -1104,7 +1104,8 @@ moncom   jsr sprint            ;print heading
 	.al
          tsc                   ;get SP &...
          sta reg_spx           ;store
-         rep #%11111111        ;clear SR &...
+         ;rep #%11111111        ;clear SR &...
+         rep #%11111011        ;clear SR &... except IRQ
          sep #srinit | sr_car  ;set default state...
 ;
 ;			-------------------------------------
@@ -3210,6 +3211,8 @@ facabcd  ldx #s_pfac-1         ;primary accumulator size -1
          rts
 ;
 ;===============================================================================
+
+	.as
 ;
 ;nybtobin: CONVERT ASCII NYBBLE TO BINARY
 ;
@@ -4022,7 +4025,7 @@ input    ldx ibufidx
 ;
 ;	waiting loop...
 ;
-@0000060 wai                   ;wait for datum
+@0000060 ;wai                   ;wait for datum
          bra @0000010
 ;
 ;===============================================================================
