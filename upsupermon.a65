@@ -125,7 +125,7 @@ auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;       control of your system they may be overwritten without consequence.
 ;       =======================================================================
 
-directpage	=$0100
+;directpage	=$0100
 
 INTVEC816	=$ffee
 BRKVEC816	=$ffe6
@@ -396,4 +396,6 @@ none	sec
 
 ;vecbrka	.word 0
 ;vecinta	.word 0
+
+directpage	=*
 	
