@@ -115,7 +115,7 @@ zeropage =$00                  ;Supermon 816's direct page...
 ;       which is ASCII <ESC> or [ESC].
 ;       =======================================================================
 ;
-ibuffer  =$008800              ;input buffer &...
+;ibuffer  =$008800              ;input buffer &...
 auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;
 ;       =======================================================================
@@ -250,8 +250,10 @@ nostp	lda #0
 	xce			; native mode
 	rep #m_setr
 	.al
+	pha
 	lda #directpage
 	tcd
+	pla
 	ply
 	plx
 	plp			; restore register width from above
@@ -388,4 +390,5 @@ none	plp
 ;vecinta	.word 0
 
 directpage	=*
+ibuffer		=*+256
 	
