@@ -889,7 +889,7 @@ vopsflag .dsb s_byte		;=range+s_byte         ;VOPS & ROPS mode bits
 ;
 ;	copy/fill workspace (overlaps some of the above)...
 ;
-mcftwork =faca                 ;start of copy/fill code
+;mcftwork =faca                 ;start of copy/fill code
 mcftopc  =mcftwork+s_byte      ;instruction opcode
 mcftbnk  =mcftopc+s_byte       ;banks
 ;
@@ -3319,13 +3319,13 @@ cpsup    pha                   ;save banks
          xba                   ;opcode
          sep #m_seta
 	.as
-         ldx #!cpcodeee-cpcode-1
-
-	; TODO: was \3cpcode,x - maybe force 3 byte address?
-@0000010 lda cpcode,x        ;transfer copy code to...
-         sta mcftwork,x        ;to workspace
-         dex
-         bpl @0000010
+;         ldx #!cpcodeee-cpcode-1
+;
+;	; TODO: was \3cpcode,x - maybe force 3 byte address?
+;@0000010 lda cpcode,x        ;transfer copy code to...
+;         sta mcftwork,x        ;to workspace
+;         dex
+;         bpl @0000010
 ;
          xba                   ;recover opcode &...
          sta mcftopc           ;set it
@@ -4156,6 +4156,7 @@ touppera rts
 ;	copy or fill operation is to be performed.
 ;	-----------------------------------------------------------------------
 ;
+mcftwork
 cpcode   phb                   ;must preserve data bank
 	;.rept s_mvinst
          nop                   ;placeholder
