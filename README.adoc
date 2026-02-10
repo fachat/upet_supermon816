@@ -19,3 +19,30 @@ into the CPU's bank 0 using the Micro-PET's bank mapping feature.
 This means that the bank 0 memory access in the assembler must
 be modified to access the memory in a different way.
 
+# COPYRIGHT
+
+Supermon 816™ Machine Language Monitor, Copyright ©2009 by William J Brier
+
+Redistribution  and  use  of  this  software  in  source  and/or  binary  forms,  with  or  without  modification,  are
+permitted, provided the following terms and conditions are met:
+
+1) Redistributions of source code must retain the above copyright notice, this list of conditions and the below disclaimer
+
+2) Redistribution in binary form must reproduce the above copyright notice, this list of conditions and the below disclaimer in the documentation and other materials included with the distribution.
+
+3) The names of the copyright holder and/or its contributors may not be used to endorse or promote products derived from this software without specific, prior written permission.
+
+# DISCLAIMER
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS and CONTRIBUTORS “AS IS”.  Any
+express or implied warranties, including, but not limited to, the implied warranties of merchantability and fitness
+for a particular purpose, are disclaimed.  In no event shall the copyright holder and/or contributors be
+liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but
+not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business
+interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort
+(including negligence or otherwise) arising in any way out of the use of this software, even if advised
+of the possibility of such damage.
+
+If  any  provision  set  forth  herein  is  not  acceptable  to  you,  DO  NOT  USE  THIS  SOFTWARE  and
+immediately delete it from your system.
+
