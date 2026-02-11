@@ -889,7 +889,7 @@ vopsflag .dsb s_byte		;=range+s_byte         ;VOPS & ROPS mode bits
 ;
 ;	copy/fill workspace (overlaps some of the above)...
 ;
-;mcftwork =faca                 ;start of copy/fill code
+mcftwork =faca                 ;start of copy/fill code
 mcftopc  =mcftwork+s_byte      ;instruction opcode
 mcftbnk  =mcftopc+s_byte       ;banks
 ;
@@ -1905,6 +1905,14 @@ moncpy   bcs @0000040          ;start not given — quit
          bcc @0000050          ;start > end — error
 ;
          sta facb              ;bytes to copy
+
+	; prime stack for call to mcftwork
+	tdc			; directpage
+	clc
+	adc #mcftwork-1		; add position in directpage
+	pha
+	; all exits below must clear the stack from this or use it
+
          sep #m_seta
 	.as
          rep #m_setx
@@ -1921,7 +1929,7 @@ moncpy   bcs @0000040          ;start not given — quit
 ;
          bne @0000010          ;must use reverse copy
 ;
-         bra @0000050          ;copy in place — error
+         bra @0000051          ;copy in place — error
 ;
 @0000010 lda facb              ;get bytes to copy
          pha                   ;protect
@@ -1943,10 +1951,11 @@ moncpy   bcs @0000040          ;start not given — quit
          pla                   ;get bytes to copy
          ldx addra             ;source start
 ;
-@0000030 jmp mcftwork          ;copy memory
+@0000030 rts	;jmp mcftwork  ;copy memory
 ;
 @0000040 jmp monce             ;back to executive
 ;
+@0000051 pla			; clear stack
 @0000050 jmp monerr            ;error
 ;
 ;===============================================================================
@@ -2063,11 +2072,19 @@ monfil   bcs @0000010          ;start not given — quit
          rep #m_setr           ;16 bit operations
 	.al
 	.xl
-         lda facb              ;get byte count
-         beq @0000010          ;only 1 location — finished
 ;
+	; prime stack for mcftwork
+	tdc			; direct page
+	clc
+	adc #mcftwork-1
+	pha
+	; all exits below must clear stack or use it
+
+         lda facb              ;get byte count
+         beq @0000011          ;only 1 location — finished
          dec                   ;zero align &...
          pha                   ;protect
+
          sep #m_seta
 	.as
          lda addra+s_word      ;start bank
@@ -2078,8 +2095,9 @@ monfil   bcs @0000010          ;start not given — quit
          ldx addra             ;fill-from starting location
          txy
          iny                   ;fill-to starting location
-         jmp mcftwork          ;fill memory
+         rts	;jmp mcftwork          ;fill memory
 ;
+@0000011 pla
 @0000010 jmp monce             ;goto command executive
 ;
 @0000020 jmp monerr            ;goto error handler
@@ -2529,10 +2547,11 @@ dpyibuf  pea ibuffer
 ;	ADDRA will point to the start of the next 16 bytes.
 ;	-----------------------------------------------------------------------
 ;
-dpymem   sep #m_setr
+dpymem   rep #m_seta
+         stz charcnt           ;reset
+	 sep #m_setr
 	.as
 	.xs
-         stz charcnt           ;reset
          lda #memprfx
          jsr putcha            ;display prefix
          jsr prntladr          ;print 24 bit address
@@ -3322,11 +3341,11 @@ cpsup    pha                   ;save banks
 ;         ldx #!cpcodeee-cpcode-1
 ;
 ;	; TODO: was \3cpcode,x - maybe force 3 byte address?
-;@0000010 lda cpcode,x        ;transfer copy code to...
-;         sta mcftwork,x        ;to workspace
-;         dex
-;         bpl @0000010
-;
+@0000010 lda cpcode,x        ;transfer copy code to...
+         sta mcftwork,x        ;to workspace
+         dex
+         bpl @0000010
+
          xba                   ;recover opcode &...
          sta mcftopc           ;set it
          rep #m_seta
@@ -3334,7 +3353,11 @@ cpsup    pha                   ;save banks
          pla                   ;get banks &...
          sta mcftbnk           ;set them
          rts
-;
+
+gomcftopc 
+	pha
+	tdc
+	
 ;===============================================================================
 ;
 ;decdcnt: DECREMENT DUMP COUNT
@@ -4156,7 +4179,6 @@ touppera rts
 ;	copy or fill operation is to be performed.
 ;	-----------------------------------------------------------------------
 ;
-mcftwork
 cpcode   phb                   ;must preserve data bank
 	;.rept s_mvinst
          nop                   ;placeholder
