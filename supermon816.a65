@@ -2475,21 +2475,23 @@ dpycod02 stz vopsflag          ;clear
 ;
 @0000020 lda #c_hex
          jsr putcha            ;operand displayed as hex
-         ldy iopsize           ;operand size = index
+         ldx iopsize           ;operand size = index
 ;
-@0000030 dey
+@0000030 dex
          bmi @0000040          ;done with operand
 ;
-         lda operand,y         ;get operand byte
+         lda operand,x         ;get operand byte
+	phx			; protect operand index
          jsr dpyhex            ;print operand byte
+	plx			; restore operand index
          bit vopsflag          ;block move?
          bpl @0000030          ;no
 ;
          stz vopsflag          ;reset
-         phy                   ;protect operand index
+         phx                   ;protect operand index
          pea ms_move
          jsr sprint            ;display MVN/MVP operand separator
-         ply                   ;recover operand index again
+         plx                   ;recover operand index again
          bra @0000030          ;continue
 ;
 @0000040 plx                   ;symbology LSB
