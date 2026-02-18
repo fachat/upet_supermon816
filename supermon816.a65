@@ -3341,6 +3341,7 @@ cpsup    pha                   ;save banks
          sep #m_seta
 	.as
 ;         ldx #!cpcodeee-cpcode-1
+         ldx #cpcodeee-cpcode-1
 ;
 ;	; TODO: was \3cpcode,x - maybe force 3 byte address?
 @0000010 lda cpcode,x        ;transfer copy code to...
