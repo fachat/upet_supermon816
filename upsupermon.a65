@@ -363,6 +363,7 @@ getcha	php
 	cli
 ;	jsr $ffe4
 	jsr $ffcf	; use full editor instead of GET
+	jsr to_ascii
 	sei
 	clc
 	xce		; native mode
@@ -383,6 +384,17 @@ getcha	php
 none	plp
 	sec
 	rts
+
+	.as
+	.xs
+&to_ascii
+	cmp #64
+	bcc ok
+	cmp #96
+	bcs shifted
+	adc #32+128
+shifted	eor #128	
+ok	rts
 
 
 ; ------------------------------------------------------
