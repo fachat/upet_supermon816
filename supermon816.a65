@@ -516,7 +516,7 @@ m_setr   =m_seta|m_setx        ;accumulator/memory & index
 ;
 s_addr   =s_xword              ;24 bit address
 s_auxbuf =32                   ;auxiliary buffer
-s_ibuf   =69                   ;input buffer
+s_ibuf   =80                   ;input buffer; 80 col screen
 s_mnemon =3                    ;MPU ASCII mnemonic
 s_mnepck =2                    ;MPU encoded mnemonic
 s_mvinst =3                    ;MVN/MVP instruction
@@ -1848,7 +1848,7 @@ monchm   bcs @0000030          ;no address given — quit
          sta [addra],y         ;to memory
          bra @0000010          ;next
 ;
-@0000020 jsr newline           ;next line
+@0000020 jsr creturn           ;next line
          jsr dpymem            ;regurgitate changes
 ;
 @0000030 jmp monce             ;back to command loop
@@ -2597,6 +2597,7 @@ dpymem   rep #m_seta
          bne @0000010          ;not done
 ;
          stz ibuffer,x         ;terminate ASCII string
+	 jsr printspc		; separate hex output from ascii for better parsing
          lda #memsepch
          jsr putcha            ;separate ASCII from bytes
          pea dc_bf
@@ -2721,6 +2722,12 @@ multspc  txa
 newline  pea dc_lf
          bra dpyerraa
 ;
+;===============================================================================
+;
+; creturn: real carriage return (just CR)
+creturn	lda #a_cr+$80
+	jmp putcha
+
 ;===============================================================================
 ;
 ;printbyt: PRINT A BYTE WITH LEADING SPACE
@@ -3915,12 +3922,15 @@ getchar  phx
 ;	          characters are interpreted as ASCII.
 ;	       2) A maximum of 32 bytes or characters is
 ;	          accepted.  Excess input will be discarded.
+;              3) A colon ends the input (mondmp outputs ASCII
+;                 version after the colon)
 ;	-----------------------------------------------------------------------
 ;
 getpat   stz status            ;clear pattern type indicator
          ldy #0                ;pattern index
          jsr getcharr          ;get last char
          beq @0000070          ;EOS
+
 ;
          ldx ibufidx           ;current buffer index
          jsr getcharw          ;get next
@@ -3934,7 +3944,13 @@ getpat   stz status            ;clear pattern type indicator
 ;
 @0000010 stx ibufidx           ;restore buffer index
 ;
-@0000020 jsr getparm           ;evaluate numeric pattern
+@0000020 jsr getchar
+	 cmp #':'
+	 beq @0000060          ; EOS
+	 dec ibufidx
+
+         jsr getparm           ;evaluate numeric pattern
+;
          bcs @0000060          ;done w/pattern
 ;
          jsr facasize          ;size
