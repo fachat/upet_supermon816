@@ -437,6 +437,8 @@ a_blank  =' '                  ;blank (whitespace)
 a_asclch ='z'                  ;end of lowercase ASCII
 a_lctouc =%01011111            ;LC to UC conversion mask
 a_asclcl ='a'                  ;start of lowercase ASCII
+
+a_prompt ='.'		       ; assembler prompt char
 ;
 ;===============================================================================
 ;
@@ -1122,12 +1124,16 @@ moncom   jsr sprint            ;print heading
 ;	---------
 ;
 	.xs
-monreg   bcs @0000010          ;okay to proceed
+monreg   bcs x0000010          ;okay to proceed
 ;
          jmp monerr            ;error if called with a parm
+
+monregchg
+	pea mm_regs2
+	bra x0000011
 ;
-@0000010 pea mm_regs
-         jsr sprint            ;display register heading
+x0000010 pea mm_regs
+x0000011 jsr sprint            ;display register heading
 ;
 ;
 ;	display program bank & counter...
@@ -1141,12 +1147,16 @@ monreg   bcs @0000010          ;okay to proceed
          sep #m_seta
 	.as
          jsr dpyhexw           ;display PC
-         ldx #2
-         jsr multspc           ;inter-field spacing
+         ;ldx #2
+         ;jsr multspc           ;inter-field spacing
+	jsr printspc
 ;
 ;
 ;	display SR in bitwise fashion...
 ;
+	lda #c_bin
+	jsr putcha		; binary prefix for parsing
+
          ldx reg_srx           ;SR
          ldy #s_bibyte         ;bits in a byte
 ;
@@ -1162,18 +1172,21 @@ monreg   bcs @0000010          ;okay to proceed
 ;
 ;	display .C, .X, .Y, SP & DP...
 ;
+	ldx #0
 @0000030 jsr printspc          ;spacing
          rep #m_seta
 	.al
-         lda reg_ax,y          ;get register value
+         lda reg_ax,x          ;get register value
          sep #m_seta
 	.as
+	phx
          jsr dpyhexw           ;convert & display
+	plx
 	;.rept s_word
-         iny
-         iny
+         inx
+         inx
 	;.endr
-         cpy #reg_dbx-reg_ax
+         cpx #reg_dbx-reg_ax
          bcc @0000030          ;next
 ;
 ;
@@ -1202,6 +1215,9 @@ moncea   sep #m_setr           ;alternate entry point
 @0000010 jsr getcharc          ;read from buffer
          beq monce             ;terminator, just loop
 ;
+	 cmp #a_prompt
+	 beq @0000010		; strip leading prompt
+
          cmp #a_blank
          beq @0000010          ;strip leading blanks
 ;
@@ -2243,7 +2259,7 @@ monchr   bcs @0000040          ;dump registers & quit
 ;
 @0000030 jsr alert             ;excessive input
 ;
-@0000040 jmp monreg            ;display changes
+@0000040 jmp monregchg            ;display changes
 ;
 @0000050 jmp monerr            ;goto error handler
 ;
@@ -4041,7 +4057,8 @@ input    ldx ibufidx
 ;
          sta ibuffer,x         ;store char
          inx                   ;bump index
-         .byte bitabs          ;echo char
+         ;.byte bitabs          ;echo char
+         bra @0000010          ;get some more
 ;
 @0000030 lda #a_bel            ;alert user
          jsr putcha
@@ -5040,11 +5057,14 @@ mm_err   .byte " *ERR",0
 ;
 mm_prmpt LF
          SF
-         .byte ".",0
+         .byte a_prompt,0
 ;
 mm_regs  LF
          .byte "  PB  PC   nvmxdizc  .C   .X   .Y   SP   DP  DB"
          LF
+         .byte "; ",0
+mm_regs2
+	.byt a_cr+$80
          .byte "; ",0
 ;
 mm_rts   RB

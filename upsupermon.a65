@@ -318,6 +318,8 @@ nostp	lda #0
 	.as
 	.xs
 &to_petscii 
+	cmp #$8d	; "true" carriage return
+	beq cremu	; emulated with CR+CRUP
 	cmp #64
 	bcc ok
 	cmp #96
@@ -325,6 +327,11 @@ nostp	lda #0
 	sbc #32+128
 shifted	eor #128	
 ok	rts
+
+cremu	lda #13
+	jsr $ffd2
+	lda #$91
+	rts
 	.)
 
 
@@ -354,7 +361,8 @@ getcha	php
 	.as
 	xce		; emulation mode
 	cli
-	jsr $ffe4
+;	jsr $ffe4
+	jsr $ffcf	; use full editor instead of GET
 	sei
 	clc
 	xce		; native mode
