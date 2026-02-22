@@ -900,6 +900,8 @@ auxbufp				; for ,y addressing
 	.word auxbuf		; needs to be initialized on init
 auxbuf
 	.dsb s_auxbuf
+ibuffer
+	.dsb s_ibuf+s_byte
 	.text
 
 ;
@@ -2578,7 +2580,12 @@ clearlin pea dc_cl
 ;
 ;dpyibuf: DISPLAY MONITOR INPUT BUFFER CONTENTS
 ;
-dpyibuf  pea ibuffer
+dpyibuf rep #m_seta
+	.al
+	tdc
+	clc
+	adc #ibuffer 
+	pha
          bra dpyerraa
 ;
 ;===============================================================================
@@ -3202,8 +3209,8 @@ binasc   stz ibufidx           ;initialize string index
          adc #a_hexdec         ;apply hex adjust
 ;
 @0000120 adc #'0'              ;change to ASCII
-         ldy ibufidx           ;string index
-         sta ibuffer,y         ;save numeral in buffer
+         ldx ibufidx           ;string index
+         sta ibuffer,x         ;save numeral in buffer
          inc ibufidx           ;next buffer position
          inc facc              ;bytes=bytes+1
 ;
@@ -3216,10 +3223,21 @@ binasc   stz ibufidx           ;initialize string index
          ldx ibufidx           ;printable string length
          stz ibuffer,x         ;terminate string
          txa
-         ldx #<ibuffer         ;converted string
-         ldy #>ibuffer
+	php
+	rep #m_seta
+	.al
+	pha
+	tdc
+	clc
+	adc #ibuffer
+	tax			; low byt into x
+	xba			; xchange lo/hi
+	tay			; low byt = upper addr byte to y
+	pla
+	plp
          clc                   ;all okay
          rts
+	.as
 ;
 ;===============================================================================
 ;

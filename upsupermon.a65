@@ -116,7 +116,7 @@ zeropage =$00                  ;Supermon 816's direct page...
 ;       =======================================================================
 ;
 ;ibuffer  =$008800              ;input buffer &...
-auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
+;auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
 ;
 ;       =======================================================================
 ;       Supermon 816 will use the above definitions for workspace in various
@@ -410,5 +410,5 @@ ok	rts
 ;vecinta	.word 0
 
 directpage	=*
-ibuffer		=*+256
+;ibuffer		=*+256
 	
