@@ -3113,16 +3113,32 @@ binasc   stz ibufidx           ;initialize string index
 ;
 ;	prepare for binary, octal or hex conversion...
 ;
-@0000040 ldx #0                ;operand index
-         ldy #s_sfac-1         ;workspace index
+; note: the next code uses ,y and ,x addressing on direct page
+;       which does not work on 65816 if direct page !=0
+;       So, I replaced it with simple load stores, as it's only 4 bytes
+;       Also, the unrolled loop is only a single byte longer
 ;
-@0000050 lda faca,x            ;copy operand to...
-         sta facb,y            ;workspace in...
-         dey                   ;big-endian order
-         inx
-         cpx #s_pfac
-         bne @0000050
+;@0000040 ldx #0                ;operand index
+;         ldy #s_sfac-1         ;workspace index
 ;
+;@0000050 lda faca,x            ;copy operand to...
+;         sta facb,y            ;workspace in...
+;         dey                   ;big-endian order
+;         inx
+;         cpx #s_pfac
+;         bne @0000050
+;
+	.assert s_pfac = 4, "size of fac mismatch"
+@0000040
+	lda faca
+	sta facb+3
+	lda faca+1
+	sta facb+2
+	lda faca+2
+	sta facb+1
+	lda faca+3
+	sta facb
+
          lda #0
          tyx
 ;
