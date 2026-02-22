@@ -561,7 +561,7 @@ aimmaska =%00011111            ;.A immediate opcode test #1
 aimmaskb =%00001001            ;.A immediate opcode test #2
 asmprfx  ='A'                  ;assemble code prefix
 ascprmct =8                    ;assembler prompt "size-of"
-disprfx  ='.'                  ;disassemble code prefix
+disprfx  ='A'                  ;disassemble code prefix
 flimmask =%11000000            ;force long immediate flag
 opc_cpxi =$e0                  ;CPX # opcode
 opc_cpyi =$c0                  ;CPY # opcode
@@ -1307,6 +1307,12 @@ monasc   bcc @0000020          ;assembly address entered
          stz mnepck+s_byte     ;mnemonic workspace
          stz vopsflag          ;clear 8/16 or relative flag
 ;
+;	skip hex bytes if any (from disassembly)
+;	also check for prompt char as sign to stop
+	jsr skiphex
+	bcc @0000041
+	jmp monce
+@0000041
 ;
 ;	encode mnemonic...
 ;
@@ -3930,6 +3936,72 @@ getchar  phx
          xba                   ;.Z
          rts
 ;
+;===============================================================================
+;skiphex: skip hex bytes if any
+;
+skiphex	phx
+	phy
+	php
+	sep #m_setr           ;force 8 bits
+	.as
+	.xs
+	ldx ibufidx           ;buffer index
+	lda ibuffer,x         ;get char
+	cmp #a_prompt
+	bne @spcloop
+	plp
+	ply
+	plx
+	sec
+	rts
+
+	; skip leading spaces
+@spcloop
+	lda ibuffer,x         ;get char
+	jsr isspc
+	bne @check
+@loop
+	inx
+	bne @spcloop
+@check
+	jsr ishex
+	bcs @endskip
+	inx
+	lda ibuffer,x
+	jsr ishex
+	bcs @endskip
+	inx
+	lda ibuffer,x
+	jsr isspc
+	bne @endskip
+	stx ibufidx	; save last space position
+	bra @loop
+@endskip
+	plp                   ;restore register widths
+	ply
+	plx
+	clc
+	rts
+
+isspc	cmp #a_ht
+	beq @spc
+	cmp #a_blank
+@spc	rts
+
+ishex	cmp #$30
+	bcc nohex
+	cmp #$3a
+	bcc hex
+	and #%01011111
+	cmp #$41	; "a"
+	bcc nohex
+	cmp #$47	; "f"+1
+	bcc hex
+nohex	sec
+	rts
+hex	clc
+	rts
+
 ;===============================================================================
 ;
 ;getpat: GET PATTERN FOR MEMORY CHANGE or SEARCH
