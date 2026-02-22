@@ -1,15 +1,17 @@
 
-all: upsupermon
+TRG=upmon
+
+all: $(TRG)
 
 
 
 
-upsupermon.o65: upsupermon.a65 supermon816.a65
-	xa -XCA65 -R -w -bt 1023 -P $@.lst -o $@ $<
+%.o65: %.a65 supermon816.a65
+	xa -XCA65 -R -w -bt 1023 -P $*.lst -o $@ $<
 
-upsupermon: upsupermon.o65
+upmon: upmon.o65
 	reloc65 -v -X -o $@ $<
 
 
 clean: 
-	rm -f upsupermon upsupermon.o65 upsupermon.o65.lst
+	rm -f $(TRG) *.o65 *.lst
