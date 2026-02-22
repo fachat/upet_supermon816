@@ -895,6 +895,11 @@ mcftwork =faca                 ;start of copy/fill code
 mcftopc  =mcftwork+s_byte      ;instruction opcode
 mcftbnk  =mcftopc+s_byte       ;banks
 ;
+;	auxbuffer
+auxbufp				; for ,y addressing
+	.word auxbuf		; needs to be initialized on init
+auxbuf
+	.dsb s_auxbuf
 	.text
 
 ;
@@ -1010,6 +1015,7 @@ monentry
 @0000010 stz reg_pbx,x         ;clear DP storage
          dex
          bpl @0000010
+
 ;
 ;
 ;	initialize register shadows...
@@ -1029,6 +1035,11 @@ monentry
 ;
          tdc                   ;get & save DP...
          sta reg_dpx           ;into shadow register
+
+	clc			; make sure auxbuf access using ,y works
+	adc #auxbuf
+	sta auxbufp
+
          lda #!0               ;flush .B
          sep #m_seta        
 	.as
@@ -1526,7 +1537,7 @@ monasc07 txa                   ;convert index...
          ldy #0
 ;
 @0000060 lda (addrb),y         ;table addressing mode
-         cmp auxbuf,y          ;entered addressing mode
+         cmp (auxbufp),y       ;entered addressing mode
          beq @0000080          ;okay so far
 ;
 @0000070 lda mnepck            ;reload mnemonic index        
@@ -1857,7 +1868,7 @@ monchm   bcs @0000030          ;no address given — quit
 @0000010 dey                   ;next byte
          bmi @0000020          ;done
 ;
-         lda auxbuf,y          ;write pattern...
+         lda (auxbufp),y       ;write pattern...
          sta [addra],y         ;to memory
          bra @0000010          ;next
 ;
@@ -2176,7 +2187,7 @@ monhnt   bcs @0000050          ;no start address
          bmi @0000030          ;pattern match
 ;
          lda [addra],y         ;get from memory
-         cmp auxbuf,y          ;test against pattern
+         cmp (auxbufp),y       ;test against pattern
          bne @0000040          ;mismatch, next location
 ;
          beq @0000020          ;match, keep testing
@@ -4085,7 +4096,7 @@ getpat   stz status            ;clear pattern type indicator
 @0000040 cpy #s_auxbuf         ;pattern buffer full?
          beq @0000050          ;yes
 ;
-         sta auxbuf,y          ;store pattern
+         sta (auxbufp),y       ;store pattern
          iny
          bit status
          bpl @0000020          ;get next numeric value
