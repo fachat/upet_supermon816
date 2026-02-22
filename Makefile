@@ -1,17 +1,22 @@
 
-TRG=upmon
+TRG=upmon sermon serldr
 
 all: $(TRG)
 
 
 
+serldr: serldr.bas
+	petcat -w40 -o $@ $<
 
-%.o65: %.a65 supermon816.a65
-	xa -XCA65 -R -w -bt 1023 -P $*.lst -o $@ $<
+upmon.o65: upmon.a65 supermon816.a65
+	xa -XCA65 -R -w -bt 1023 -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
 
-upmon: upmon.o65
+sermon.o65: sermon.a65 supermon816.a65
+	xa -XCA65 -R -w -bt 24574 -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
+
+%: %.o65
 	reloc65 -v -X -o $@ $<
 
 
 clean: 
-	rm -f $(TRG) *.o65 *.lst
+	rm -f $(TRG) *.o65 *.lst *.lab
