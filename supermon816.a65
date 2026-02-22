@@ -560,7 +560,7 @@ a_mnecvt ='?'                  ;encoded mnemonic conversion base
 aimmaska =%00011111            ;.A immediate opcode test #1
 aimmaskb =%00001001            ;.A immediate opcode test #2
 asmprfx  ='A'                  ;assemble code prefix
-ascprmct =9                    ;assembler prompt "size-of"
+ascprmct =8                    ;assembler prompt "size-of"
 disprfx  ='.'                  ;disassemble code prefix
 flimmask =%11000000            ;force long immediate flag
 opc_cpxi =$e0                  ;CPX # opcode
@@ -576,7 +576,7 @@ pfmxmask =sr_amw | sr_ixw      ;MPU m & x flag bits mask
 ;
 ;	assembler prompt buffer offsets...
 ;
-apadrbkh =s_word               ;instruction address bank MSN
+apadrbkh =s_byte               ;instruction address bank MSN
 apadrbkl =apadrbkh+s_byte      ;instruction address bank LSN
 apadrmbh =apadrbkl+s_byte      ;instruction address MSB MSN
 apadrmbl =apadrmbh+s_byte      ;instruction address MSB LSN
@@ -1200,7 +1200,8 @@ x0000011 jsr sprint            ;display register heading
 ;
 ;monce: COMMAND EXECUTIVE
 ;	
-monce    sep #m_seta           ;8-bit .A
+monce    
+	sep #m_seta           ;8-bit .A
 	.as
          lda #0                ;default buffer index
 ;
@@ -1615,7 +1616,7 @@ monasc08 lda opcode            ;opcode
          dey
          bne @0000010          ;next
 ;
-@0000020 lda #a_cr
+@0000020 lda #a_cr+$80
          jsr putcha            ;return to left margin
          lda #asmprfx          ;assembly prefix
          jsr dpycodaa          ;disassemble & display
@@ -1623,14 +1624,18 @@ monasc08 lda opcode            ;opcode
 ;
 ;	prompt for next instruction...
 ;
-monasc09 lda #a_blank
+monasc09 
+         lda #asmprfx          ;assemble code...
+monnext	 pha
+
+         lda #a_blank
          ldx #ascprmct-1
 ;
 @0000010 sta ibuffer,x         ;prepare buffer for...
          dex                   ;next instruction
          bpl @0000010
 ;
-         lda #asmprfx          ;assemble code...
+	 pla
          sta ibuffer           ;prompt prefix
          lda addra+s_word      ;next instruction address bank
          jsr binhex            ;convert to ASCII
@@ -1834,13 +1839,15 @@ monchm   bcs @0000030          ;no address given — quit
          bcs @0000040          ;address out of range — error
 ;
          jsr facaddra          ;set starting address
+
          jsr getpat            ;evaluate change pattern
-         bcc @0000010          ;entered
+         bcc @0000011          ;entered
 ;
-         bpl @0000020          ;not entered
+         bpl @0000030          ;not entered
 ;
          bra @0000040          ;evaluation error
 ;
+@0000011 sty faca	       ; save number of entered bytes
 @0000010 dey                   ;next byte
          bmi @0000020          ;done
 ;
@@ -1849,8 +1856,11 @@ monchm   bcs @0000030          ;no address given — quit
          bra @0000010          ;next
 ;
 @0000020 jsr creturn           ;next line
-         jsr dpymem            ;regurgitate changes
-;
+	ldy faca
+         jsr dpymemn            ;regurgitate changes
+	lda #memprfx
+	jmp monnext
+;	
 @0000030 jmp monce             ;back to command loop
 ;
 @0000040 jmp monerr            ;goto error handler
@@ -2556,6 +2566,20 @@ dpyibuf  pea ibuffer
 ;
 ;===============================================================================
 ;
+; dpymemprfix: 	display prefix for memory display
+;		used in dpymem but also in monchm
+
+dpymemprfix:
+	 sep #m_setr
+	.as
+	.xs
+         lda #memprfx
+         jsr putcha            ;display prefix
+	 jsr printspc
+         jmp prntladr          ;print 24 bit address
+
+;===============================================================================
+;
 ;dpymem: DISPLAY MEMORY
 ;
 ;	-----------------------------------------------------------------------
@@ -2565,16 +2589,19 @@ dpyibuf  pea ibuffer
 ;	ADDRA will point to the start of the next 16 bytes.
 ;	-----------------------------------------------------------------------
 ;
-dpymem   rep #m_seta
+dpymem   ldy #n_dump           ;bytes per line
+dpymemn  rep #m_seta		; number of bytes in y
          stz charcnt           ;reset
 	 sep #m_setr
 	.as
 	.xs
-         lda #memprfx
-         jsr putcha            ;display prefix
-         jsr prntladr          ;print 24 bit address
+;         lda #memprfx
+;         jsr putcha            ;display prefix
+;         jsr prntladr          ;print 24 bit address
+	phy
+	jsr dpymemprfix
+	ply
          ldx #0                ;string buffer index
-         ldy #n_dump           ;bytes per line
 ;
 @0000010 jsr getbyte           ;get from RAM, also...
          pha                   ;save for decoding
@@ -3922,8 +3949,8 @@ getchar  phx
 ;	          characters are interpreted as ASCII.
 ;	       2) A maximum of 32 bytes or characters is
 ;	          accepted.  Excess input will be discarded.
-;              3) A colon ends the input (mondmp outputs ASCII
-;                 version after the colon)
+;	       3) A colon or the prompt char ends the input (mondmp outputs ASCII
+;	          version after the colon)
 ;	-----------------------------------------------------------------------
 ;
 getpat   stz status            ;clear pattern type indicator
@@ -3936,6 +3963,9 @@ getpat   stz status            ;clear pattern type indicator
          jsr getcharw          ;get next
          beq @0000070          ;EOS
 ;
+	 cmp #a_prompt
+	 beq @0000070
+
          cmp #'\''
          bne @0000010          ;not ASCII input
 ;
@@ -3947,6 +3977,7 @@ getpat   stz status            ;clear pattern type indicator
 @0000020 jsr getchar
 	 cmp #':'
 	 beq @0000060          ; EOS
+
 	 dec ibufidx
 
          jsr getparm           ;evaluate numeric pattern
