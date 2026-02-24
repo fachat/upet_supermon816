@@ -350,6 +350,8 @@ getcha	php
 ;	jsr $ffe4
 	jsr $ffcf	; use full editor instead of GET
 ;	jsr to_ascii
+	; echo
+	jsr $ffd2
 	sei
 	clc
 	xce		; native mode
