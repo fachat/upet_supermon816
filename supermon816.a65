@@ -576,7 +576,8 @@ pfmxmask =sr_amw | sr_ixw      ;MPU m & x flag bits mask
 ;
 ;	assembler prompt buffer offsets...
 ;
-apadrbkh =s_byte               ;instruction address bank MSN
+apadrspc =s_byte               ;space before address
+apadrbkh =apadrspc+s_byte      ;instruction address bank MSN
 apadrbkl =apadrbkh+s_byte      ;instruction address bank LSN
 apadrmbh =apadrbkl+s_byte      ;instruction address MSB MSN
 apadrmbl =apadrmbh+s_byte      ;instruction address MSB LSN
@@ -835,6 +836,11 @@ srinit   =%00000000            ;SR initialization value
 ; from reg_pbx to vopsflag (vopsflag-reg_pbx bytes)
 ;
 	.zero
+	; input buffer at start of direct page so can be filled
+	; from outside code
+ibuffer
+	.dsb s_ibuf+s_byte
+
 reg_pbx  .dsb s_mpupbx		;=zeropage             ;PB shadow
 reg_pcx  .dsb s_mpupcx		;=reg_pbx+s_mpupbx     ;PC shadow
 reg_srx  .dsb s_mpusrx		;=reg_pcx+s_mpupcx     ;SR shadow
@@ -900,10 +906,8 @@ auxbufp				; for ,y addressing
 	.word auxbuf		; needs to be initialized on init
 auxbuf
 	.dsb s_auxbuf
-ibuffer
-	.dsb s_ibuf+s_byte
-	.text
 
+	.text
 ;
 ;===============================================================================
 ;
@@ -955,7 +959,7 @@ ibuffer
 ;         .byte a_cr
 ;         .endm
 ;
-;lf       .macro                ;carriage return/line feed
+;lf      .macro                ;carriage return/line feed
 #define	LF	.byt a_cr, a_lf
 ;         .byte a_cr,a_lf
 ;         .endm
@@ -1026,8 +1030,9 @@ monentry
          sta reg_srx           ;status register
          rep #m_seta      
 	.al
-         lda #!hwstack         ;top of hardware stack
-         tcs                   ;set SP...
+; do not touch stack
+;         lda #!hwstack         ;top of hardware stack
+;         tcs                   ;set SP...
 ;
 ;			-------------------------------------------------------
 ;			The stack pointer initialization is an optional step
@@ -1069,42 +1074,45 @@ monentry
 ;	documentation for what Supermon 816 expects to find on the stack follow-
 ;	ing a BRK.
 ;	------------------------------------------------------------------------
+
+; TODO: two different entry points for native and emulation modes
+
 ;
-monbrk   ;pea localdp          ;operating environment's direct page
-         ;pld                   ;set it...
-;
-;	------------------------------------------------------------------------
-;	Uncomment the above instructions to set a definition for the monitor's
-;	direct page location.  If left commented, the value in DP will be used
-;	as is.
-;	------------------------------------------------------------------------
-;         
-         ply                   ;recover registers
-         plx
-         pla
-         rep #m_setr           ;store 16 bit registers
-	.xl
-	.al
-         sta reg_ax            ;.A
-         stx reg_xx            ;.X
-         sty reg_yx            ;.Y
-         sep #m_setx           ;8 bit index registers
-	.xs
-         pla                   ;get DP &...
-         sta reg_dpx           ;store
-         plx                   ;get DB &...
-         stx reg_dbx           ;store
-         plx                   ;get SR &...
-         stx reg_srx           ;store
-         pla                   ;get PC &...
-         sta reg_pcx           ;store
-         sep #m_seta
-	.as
-         pla                   ;get PB &...
-         sta reg_pbx           ;store
-         ;cli                   ;reenable IRQs
-         pea mm_brk           ;"*BRK"
-;
+;monbrk   ;pea localdp          ;operating environment's direct page
+;         ;pld                   ;set it...
+;;
+;;	------------------------------------------------------------------------
+;;	Uncomment the above instructions to set a definition for the monitor's
+;;	direct page location.  If left commented, the value in DP will be used
+;;	as is.
+;;	------------------------------------------------------------------------
+;;         
+;         ply                   ;recover registers
+;         plx
+;         pla
+;         rep #m_setr           ;store 16 bit registers
+;	.xl
+;	.al
+;         sta reg_ax            ;.A
+;         stx reg_xx            ;.X
+;         sty reg_yx            ;.Y
+;         sep #m_setx           ;8 bit index registers
+;	.xs
+;         pla                   ;get DP &...
+;         sta reg_dpx           ;store
+;         plx                   ;get DB &...
+;         stx reg_dbx           ;store
+;         plx                   ;get SR &...
+;         stx reg_srx           ;store
+;         pla                   ;get PC &...
+;         sta reg_pcx           ;store
+;         sep #m_seta
+;	.as
+;         pla                   ;get PB &...
+;         sta reg_pbx           ;store
+;         ;cli                   ;reenable IRQs
+;         pea mm_brk           ;"*BRK"
+;;
 ;===============================================================================
 ;
 ;moncom: COMMON ENTRY POINT
@@ -1656,6 +1664,8 @@ monnext	 pha
 ;
 	 pla
          sta ibuffer           ;prompt prefix
+	lda #a_blank
+	sta ibuffer+apadrspc
          lda addra+s_word      ;next instruction address bank
          jsr binhex            ;convert to ASCII
          sta ibuffer+apadrbkh  ;store MSN in buffer
@@ -2369,7 +2379,12 @@ dpycod   lda #disprfx          ;default prefix
 ;
 ;	alternate prefix display entry point...
 ;
-dpycodaa jsr putcha            ;print prefix
+dpycodaa 
+	pha
+	lda #a_prompt
+	jsr putcha
+	pla
+	jsr putcha            ;print prefix
          jsr printspc          ;space
          jsr prntladr          ;print long address
          jsr printspc          ;space to opcode field
@@ -2597,9 +2612,11 @@ dpymemprfix:
 	 sep #m_setr
 	.as
 	.xs
+	lda #a_prompt
+	jsr putcha
          lda #memprfx
          jsr putcha            ;display prefix
-	 jsr printspc
+	; jsr printspc
          jmp prntladr          ;print 24 bit address
 
 ;===============================================================================
@@ -2619,9 +2636,6 @@ dpymemn  rep #m_seta		; number of bytes in y
 	 sep #m_setr
 	.as
 	.xs
-;         lda #memprfx
-;         jsr putcha            ;display prefix
-;         jsr prntladr          ;print 24 bit address
 	phy
 	jsr dpymemprfix
 	ply
@@ -4213,10 +4227,16 @@ input    ldx ibufidx
 @0000020 cmp #a_blank          ;control char?
          bcc @0000040          ;yes
 ;
+;	check if prompt as first char
+	cmp #a_prompt
+	bne @0000021
+	cpx ibufidx		; are we on the start?
+	bne @0000021
+	ldx #0			; reset the input buffer pointer
 ;
 ;	process QWERTY character...
 ;
-         cpx #s_ibuf           ;room in buffer?
+@0000021 cpx #s_ibuf           ;room in buffer?
          bcs @0000030          ;no
 ;
          sta ibuffer,x         ;store char
