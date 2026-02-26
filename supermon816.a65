@@ -560,7 +560,6 @@ a_mnecvt ='?'                  ;encoded mnemonic conversion base
 aimmaska =%00011111            ;.A immediate opcode test #1
 aimmaskb =%00001001            ;.A immediate opcode test #2
 asmprfx  ='A'                  ;assemble code prefix
-ascprmct =8                    ;assembler prompt "size-of"
 disprfx  ='A'                  ;disassemble code prefix
 flimmask =%11000000            ;force long immediate flag
 opc_cpxi =$e0                  ;CPX # opcode
@@ -583,6 +582,7 @@ apadrmbh =apadrbkl+s_byte      ;instruction address MSB MSN
 apadrmbl =apadrmbh+s_byte      ;instruction address MSB LSN
 apadrlbh =apadrmbl+s_byte      ;instruction address LSB MSN
 apadrlbl =apadrlbh+s_byte      ;instruction address LSB LSN
+ascprmct =9                    ;assembler prompt "size-of"
 ;
 ;
 ;	addressing mode preamble symbols...

@@ -297,8 +297,9 @@ nostp	lda #0
 	xce			; emulation mode
 	cli
 	jsr to_petscii
+	bcs noprint
 	jsr $ffd2
-	sei
+noprint	sei
 	clc
 	xce			; native mode
 	rep #m_setx+m_seta 
@@ -318,6 +319,8 @@ nostp	lda #0
 	.as
 	.xs
 &to_petscii 
+	cmp #7		; bel - printed during input, resets editor input
+	beq nok
 	cmp #$8d	; "true" carriage return
 	beq cremu	; emulated with CR+CRUP
 	cmp #64
@@ -326,7 +329,8 @@ nostp	lda #0
 	bcc shifted
 	sbc #32+128
 shifted	eor #128	
-ok	rts
+ok	clc
+nok	rts
 
 cremu	lda #13
 	jsr $ffd2
