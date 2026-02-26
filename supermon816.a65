@@ -2616,7 +2616,7 @@ dpymemprfix:
 	jsr putcha
          lda #memprfx
          jsr putcha            ;display prefix
-	; jsr printspc
+	 jsr printspc
          jmp prntladr          ;print 24 bit address
 
 ;===============================================================================
@@ -4191,6 +4191,20 @@ getcharw jsr getchar           ;get from buffer
 ;	Preparatory Ops: Zero IBUFIDX or load IBUFFER with default
 ;	                 input & set IBUFIDX to the number of chars
 ;	                 loaded into the buffer.
+;
+;	                 The default input is printed out before 
+;	                 reading the line from the keyboard/input
+;	                 
+;	                 IFF the input from keyboard starts with the
+;	                 prompt char, the default input is discarded
+;	                 and the input starts at the beginning of the line.
+;	                 This accomodates the Commodore full screen
+;	                 editor that returns input from the last print
+;	                 IFF the line is not changed, BUT from the 
+;	                 start of line if the line is changed.
+;	                 On a new line (line changed), a new command
+;	                 starts with the prompt char, so if that 
+;	                 is received input is reset to start of ibuffer.
 ;
 ;	Returned Values: .A: used
 ;	                 .X: characters entered
