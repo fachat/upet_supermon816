@@ -135,35 +135,8 @@ start
 	clc		; go into native mode
 	xce
 
-;        sep #m_seta           ;16-bit .A
-;        .as
-;	rep #m_setx
-;	.xl
-;
-;	; make ROM writable
-;	lda $e801
-;	and #%01111111
-;	lda #0
-;	sta $e801
-;
-;	; set native int vector (overwrites SCRORG to get w/h of screen)
-;	ldx #int816
-;	stx INTVEC816
-;
-;	ora #%10000000
-;	sta $e801
-	
 	rep #m_seta
 	.al
-
-	; set BRK vector
-;         lda vecbrki           ;BRK vector
-;         cmp #!JMONBRK         ;pointing at monitor?
-;         beq monreg            ;yes, ignore cold start
-
-;         sta vecbrkia          ;save vector for exit
-;         lda #!JMONBRK         ;Supermon 816 intercepts...
-;         sta vecbrki           ;BRK handler
 
 	; set direct register
 	lda #directpage
@@ -183,19 +156,12 @@ vecexit
 	rep #m_seta
 	.al
 
+	pla		; pull return address
+
 	; reset direct register
 	lda #0
 	tcd
 
-	; reset BRK vector
-;         lda vecbrki           ;BRK indirect vector
-;         cmp #!JMONBRK         ;we intercept it?
-;         bne @0000010          ;no, don't change it
-;
-;         lda vecbrkia          ;old vector
-;         sta vecbrki           ;restore it
-;         stz vecbrkia          ;invalidate old vector
-	
 	sec		; go into emulation mode
 	xce
 	cli
