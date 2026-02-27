@@ -1232,6 +1232,9 @@ moncea   sep #m_setr           ;alternate entry point
          sta ibufidx           ;(re)set buffer index
          pea mm_prmpt
          jsr sprint            ;display input prompt
+	rts
+
+monceinput
          jsr input             ;await some input
 ;
 @0000010 jsr getcharc          ;read from buffer
@@ -1643,7 +1646,7 @@ monasc08 lda opcode            ;opcode
          dey
          bne @0000010          ;next
 ;
-@0000020 lda #a_cr+$80
+@0000020 lda #a_cr
          jsr putcha            ;return to left margin
          lda #asmprfx          ;assembly prefix
          jsr dpycodaa          ;disassemble & display
@@ -2790,8 +2793,8 @@ newline  pea dc_lf
 ;===============================================================================
 ;
 ; creturn: real carriage return (just CR)
-creturn	lda #a_cr+$80
-	jmp putcha
+creturn	lda #a_cr
+	jmp printcmn
 
 ;===============================================================================
 ;
@@ -5262,7 +5265,7 @@ mm_regs  LF
          LF
          .byte "; ",0
 mm_regs2
-	.byt a_cr+$80
+	.byt a_cr
          .byte "; ",0
 ;
 mm_rts   RB

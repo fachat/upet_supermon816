@@ -173,8 +173,11 @@ start
         .xs
         .as
 
-	jmp monentry
-	
+	jsr monentry
+loop
+	jsr monceinput
+
+	bra loop	
 
 vecexit	
 	rep #m_seta
@@ -321,8 +324,10 @@ noprint	sei
 &to_petscii 
 	cmp #7		; bel - printed during input, resets editor input
 	beq nok
-	cmp #$8d	; "true" carriage return
+	cmp #$0d	; carriage return
 	beq cremu	; emulated with CR+CRUP
+	cmp #$0a	; line feed
+	beq lfemu
 	cmp #64
 	bcc ok
 	cmp #96
@@ -332,9 +337,13 @@ shifted	eor #128
 ok	clc
 nok	rts
 
-cremu	lda #13
-	jsr $ffd2
-	lda #$91
+lfemu	lda #0
+	sta $cd		; disable quote mode
+	lda #$11	; crsr down
+	bne ok
+cremu	lda $e2		; set column to start of line
+	sta $c6		;
+	sec
 	rts
 	.)
 
