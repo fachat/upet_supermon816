@@ -437,6 +437,7 @@ a_blank  =' '                  ;blank (whitespace)
 a_asclch ='z'                  ;end of lowercase ASCII
 a_lctouc =%01011111            ;LC to UC conversion mask
 a_asclcl ='a'                  ;start of lowercase ASCII
+a_colon  =':'                  ;colon limiting memory and assembly input
 
 a_prompt ='.'		       ; assembler prompt char
 ;
@@ -1431,6 +1432,9 @@ monasc02 sep #m_seta           ;back to 8 bits
 monasc03 jsr getcharw          ;get next char
          beq monasc06          ;EOI, no argument
 ;
+	 cmp #a_colon          ; separator 
+	 beq monasc06
+
          cmp #amp_flim
          bne @0000010          ;no forced long immediate
 ;
@@ -1481,6 +1485,9 @@ monasc06 dec ibufidx           ;back to last char
 ;
 @0000010 jsr getcharc          ;get a char w/forced UC
          beq @0000030          ;EOI
+
+	 cmp #a_colon	       ; separator
+	 beq @0000030
 ;
          cpx #s_auxbuf         ;mode buffer full?
          bcs monasc04          ;yes, too much input
@@ -2957,6 +2964,9 @@ ascbin01 jsr getchar           ;get next char
          cmp #','
          beq ascbin03          ;comma — EOF
 ;
+	 cmp #a_colon
+	 beq ascbin03
+
          cmp #a_ht
 ascbin03a
          beq ascbin03          ;tab — EOF
