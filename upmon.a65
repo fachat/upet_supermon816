@@ -56,39 +56,6 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 ;       changes will be in the order in which registers are pushed to the stack.
 ;       =======================================================================
 ;
-;
-;       =======================================================================
-hwstack  =$0001ff              ;top of hardware stack...
-;
-;       Supermon 816 initializes the stack pointer to this address when the cold
-;       start at JMON is called to enter the monitor.  The stack pointer will be
-;       undisturbed when entry into Supermon 816 is through JMONBRK.
-;
-;       JMON & JMONBRK are defined in the Supermon 816's jump table.
-;       =======================================================================
-;
-;       =======================================================================
-zeropage =$00                  ;Supermon 816's direct page...
-;
-;       Supermon 816 uses direct page starting at this address.  Be sure that no
-;       conflict occurs with other software, as an overwrite of any of these
-;       locations may be fatal to Supermon 816.
-;       =======================================================================
-;
-;       =======================================================================
-;getcha   =$00ffff              ;get datum from TIA-232 channel A...
-
-;       GETCHA refers to an operating system API call that returns a datum in
-;       the 8 bit accumulator.  Supermon 816 assumes that GETCHA is a non-block-
-;       ing subroutine & returns with carry clear to indicate that a datum is in
-;       .A, or with carry set to indicate that no datum was available.  GETCHA
-;       will be called with a JSR instruction.
-;
-;       Supermon 816 expects .X & .Y to be preserved upon return from GETCHA.
-;       You may have to modify Supermon 816 at all calls to GETCHA if your "get
-;       datum" routine works differently than described.
-;       =======================================================================
-;
 ;       =======================================================================
 ;putcha   =$00ffff              ;print character on console...
 ;
@@ -103,29 +70,6 @@ zeropage =$00                  ;Supermon 816's direct page...
 ;       character" routine works differently than described.
 ;       =======================================================================
 ;
-;       =======================================================================
-;stopkey  =$03                  ;display abort key...
-;
-;       Supermon 816 will poll for a "stop key" during display operations, such
-;       as code disassembly & memory dumps, so as to abort further processing &
-;       return to the command prompt.  STOPKEY must be defined with the ASCII
-;       value that the "stop key" will emit when typed.  The polling is via a
-;       call to GETCHA (described above).  The default STOPKEY definition of $03
-;       is for ASCII <ETX> or [Ctrl-C].  An alternative definition could be $1B,
-;       which is ASCII <ESC> or [ESC].
-;       =======================================================================
-;
-;ibuffer  =$008800              ;input buffer &...
-;auxbuf   =ibuffer+s_ibuf+s_byte ;auxiliary buffer...
-;
-;       =======================================================================
-;       Supermon 816 will use the above definitions for workspace in various
-;       ways.  These buffers may be located anywhere in RAM that is convenient.
-;       The buffers are stateless, which means that unless Supermon 816 has
-;       control of your system they may be overwritten without consequence.
-;       =======================================================================
-
-;directpage	=$0100
 
 INTVEC816	=$ffee
 BRKVEC816	=$ffe6
@@ -146,11 +90,87 @@ start
         .xs
         .as
 
+	; returns length of pre-filled data in ibuf in x
 	jsr monentry
-loop
-	jsr monceinput
+@loop
+	jsr input
 
-	bra loop	
+	; returns length of pre-filled data in ibuf in x
+	jsr monceprocess
+
+	bra @loop	
+
+	; set assembler to absolute mode to trick it into
+	; adding text and zp labels (relocation doesn't work)
+	*=0
+d_ibuffer	=directpage + ibuffer
+d_ibufidx	=directpage + ibufidx
+	*=
+
+input	.(
+	php
+	rep #m_seta
+	.al
+	lda #0
+	tcd		; direct page to zero
+	sec
+	xce		; emulation mode
+	.as
+	.xs
+	cli
+	; here we are in emulation mode, x has the 
+	; starting index in ibuf, which goes until ibuf_s
+loop
+	jsr $ffcf
+	jsr to_ascii
+
+	cmp #a_del	; above ASCII?
+	bcs x30		; yes, ignored
+	cmp #a_ht	; horizontal tab?
+	bne x20		; no
+	lda #a_blank	; replace tab with space
+x20	cmp #a_blank	; control char?
+	bcc x40		; yes
+
+	; check if prompt as first char?
+	cmp #a_prompt
+	bne x21
+	cpx d_ibufidx	; is first char?
+	bne x21
+	ldx #0		; reset input buffer pointer
+
+x21	cpx #s_ibuf	; room in buffer?
+	bcs x30		; no
+
+	sta d_ibuffer,x
+	inx
+	bra loop
+	
+	; invalid char of buffer len - output bel? TODO
+x30	bra loop
+
+	; other control chars
+x50	bra loop
+
+	; control chars
+x40	cmp #a_cr	; carriage return?
+	bne x50		; no
+	stz d_ibuffer,x
+	stz d_ibufidx
+
+	sei
+	clc
+	xce		; back to native mode
+	rep #m_seta
+	.al
+	lda #directpage
+	tcd
+	lda #0
+	plp
+	.as
+	.xs
+	rts
+	.)
 
 vecexit	
 	rep #m_seta
@@ -313,60 +333,9 @@ cremu	lda $e2		; set column to start of line
 	rts
 	.)
 
-
-; ------------------------------------------------------
-;       GETCHA refers to an operating system API call that returns a datum in
-;       the 8 bit accumulator.  Supermon 816 assumes that GETCHA is a non-block-
-;       ing subroutine & returns with carry clear to indicate that a datum is in
-;       .A, or with carry set to indicate that no datum was available.  GETCHA
-;       will be called with a JSR instruction.
-;
-;       Supermon 816 expects .X & .Y to be preserved upon return from GETCHA.
-;       You may have to modify Supermon 816 at all calls to GETCHA if your "get
-;       datum" routine works differently than described.
-
 	.as
 	.xs
-getcha	php
-	rep #m_setr
-	.al
-	.xl
-	phx
-	phy
-	lda #0
-	tcd
-	sep #m_setx+m_seta+1
-	.xs
-	.as
-	xce		; emulation mode
-	cli
-;	jsr $ffe4
-	jsr $ffcf	; use full editor instead of GET
-	jsr to_ascii
-	sei
-	clc
-	xce		; native mode
-	rep #m_setx+m_seta
-	.xl
-	.al
-	pha
-	lda #directpage
-	tcd
-	pla
-	ply
-	plx
-	cmp #1
-	bcc none
-	plp
-	clc
-	rts
-none	plp
-	sec
-	rts
-
-	.as
-	.xs
-&to_ascii
+&to_ascii .(
 	cmp #64
 	bcc ok
 	cmp #96
@@ -374,7 +343,7 @@ none	plp
 	adc #32+128
 shifted	eor #128	
 ok	rts
-
+	.)
 
 ; ------------------------------------------------------
 

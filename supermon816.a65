@@ -1233,10 +1233,9 @@ moncea   sep #m_setr           ;alternate entry point
          sta ibufidx           ;(re)set buffer index
          pea mm_prmpt
          jsr sprint            ;display input prompt
-	rts
+	jmp input_init
 
-monceinput
-         jsr input             ;await some input
+monceprocess
 ;
 @0000010 jsr getcharc          ;read from buffer
          beq monce             ;terminator, just loop
@@ -4230,85 +4229,89 @@ getcharw jsr getchar           ;get from buffer
 ;	       IBUFIDX is reset to zero upon exit.
 ;	-----------------------------------------------------------------------
 ;
-input    ldx ibufidx
+input_init
+	 ldx ibufidx
          stz ibuffer,x         ;be sure buffer is terminated
          jsr dpyibuf           ;print default input if any
-         pea dc_cn
-         jsr sprint            ;enable cursor
-         ldx ibufidx           ;starting buffer index
-;
-;
-;	main input loop...
-;
-@0000010 jsr getcha            ;poll for input
-         bcs @0000060          ;nothing
-;
-         cmp #a_del            ;above ASCII range?
-         bcs @0000030          ;yes, not allowed
-;
-         cmp #a_ht             ;horizontal tab?
-         bne @0000020          ;no
-;
-         lda #a_blank          ;replace <HT> w/blank
-;
-@0000020 cmp #a_blank          ;control char?
-         bcc @0000040          ;yes
-;
-;	check if prompt as first char
-	cmp #a_prompt
-	bne @0000021
-	cpx ibufidx		; are we on the start?
-	bne @0000021
-	ldx #0			; reset the input buffer pointer
-;
-;	process QWERTY character...
-;
-@0000021 cpx #s_ibuf           ;room in buffer?
-         bcs @0000030          ;no
-;
-         sta ibuffer,x         ;store char
-         inx                   ;bump index
-         ;.byte bitabs          ;echo char
-         bra @0000010          ;get some more
-;
-@0000030 lda #a_bel            ;alert user
-         jsr putcha
-         bra @0000010          ;get some more
-;
-;
-;	process carriage return...
-;
-@0000040 cmp #a_cr             ;carriage return?
-         bne @0000050          ;no
-;
-         phx                   ;protect input count
-         pea dc_co
-         jsr sprint            ;cursor off
-         plx                   ;recover input count
-         stz ibuffer,x         ;terminate input
-         stz ibufidx           ;reset buffer index
-         rts                   ;done
-;
-;
-;	process backspace...
-;
-@0000050 cmp #a_bs             ;backspace?
-         bne @0000010          ;no
-;
-         txa
-         beq @0000010          ;no input, ignore <BS>
-;
-         dex                   ;1 less char
-         phx                   ;preserve count
-         jsr gendbs            ;destructive backspace
-         plx                   ;restore count
-         bra @0000010          ;get more input
-;
-;
-;	waiting loop...
-;
-@0000060 ;wai                   ;wait for datum
-         bra @0000010
+;         pea dc_cn
+;         jsr sprint            ;enable cursor
+	 ldx ibufidx
+	rts
+
+;         ldx ibufidx           ;starting buffer index
+;;
+;;
+;;	main input loop...
+;;
+;@0000010 jsr getcha            ;poll for input
+;         bcs @0000060          ;nothing
+;;
+;         cmp #a_del            ;above ASCII range?
+;         bcs @0000030          ;yes, not allowed
+;;
+;         cmp #a_ht             ;horizontal tab?
+;         bne @0000020          ;no
+;;
+;         lda #a_blank          ;replace <HT> w/blank
+;;
+;@0000020 cmp #a_blank          ;control char?
+;         bcc @0000040          ;yes
+;;
+;;	check if prompt as first char
+;	cmp #a_prompt
+;	bne @0000021
+;	cpx ibufidx		; are we on the start?
+;	bne @0000021
+;	ldx #0			; reset the input buffer pointer
+;;
+;;	process QWERTY character...
+;;
+;@0000021 cpx #s_ibuf           ;room in buffer?
+;         bcs @0000030          ;no
+;;
+;         sta ibuffer,x         ;store char
+;         inx                   ;bump index
+;         ;.byte bitabs          ;echo char
+;         bra @0000010          ;get some more
+;;
+;@0000030 lda #a_bel            ;alert user
+;         jsr putcha
+;         bra @0000010          ;get some more
+;;
+;;
+;;	process carriage return...
+;;
+;@0000040 cmp #a_cr             ;carriage return?
+;         bne @0000050          ;no
+;;
+;         phx                   ;protect input count
+;         pea dc_co
+;         jsr sprint            ;cursor off
+;         plx                   ;recover input count
+;         stz ibuffer,x         ;terminate input
+;         stz ibufidx           ;reset buffer index
+;         rts                   ;done
+;;
+;;
+;;	process backspace...
+;;
+;@0000050 cmp #a_bs             ;backspace?
+;         bne @0000010          ;no
+;;
+;         txa
+;         beq @0000010          ;no input, ignore <BS>
+;;
+;         dex                   ;1 less char
+;         phx                   ;preserve count
+;         jsr gendbs            ;destructive backspace
+;         plx                   ;restore count
+;         bra @0000010          ;get more input
+;;
+;;
+;;	waiting loop...
+;;
+;@0000060 ;wai                   ;wait for datum
+;         bra @0000010
 ;
 ;===============================================================================
 ;
