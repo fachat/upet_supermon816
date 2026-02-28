@@ -3066,6 +3066,7 @@ ascbin02 lda faca              ;N
          ;bcc ascbin01          ;next if no overflow
 ;
          bcs ascbin04          ;overflow — error
+
          jmp ascbin01          ;next if no overflow
 ;
 ;
@@ -3662,7 +3663,12 @@ getparm  phy                   ;preserve
          beq @0000020          ;end of parameter
 ;
          cmp #','              ;recognized delimiter
+	 beq @0000020 
+;
+	 cmp #a_colon          ; recognized delimiter
          bne @0000040          ;unknown delimter
+
+	 dec ibufidx		; if colon, make sure it is read in parent function
 ;
 @0000020 clc
          .byte bitzp           ;skip SEC below
@@ -4118,7 +4124,7 @@ getpat   stz status            ;clear pattern type indicator
 @0000010 stx ibufidx           ;restore buffer index
 ;
 @0000020 jsr getchar
-	 cmp #':'
+	 cmp #a_colon
 	 beq @0000060          ; EOS
 
 	 dec ibufidx
