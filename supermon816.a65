@@ -1236,7 +1236,14 @@ moncea   sep #m_setr           ;alternate entry point
 	jmp input_init
 
 monceprocess
-;
+	rep #m_setx
+	.xl
+	tsx
+	stx reg_spx
+	sep #m_setr
+	.as
+	.xs
+
 @0000010 jsr getcharc          ;read from buffer
          beq monce             ;terminator, just loop
 ;
@@ -1279,7 +1286,11 @@ monceprocess
 ;
 ;monerr: COMMON ERROR HANDLER
 ;
-monerr   sep #m_setr           ;8 bit registers
+monerr  rep #m_setx
+	.xl
+	ldx reg_spx
+	txs
+	sep #m_setr           ;8 bit registers
 	.as
 	.xs
 ;
@@ -3679,11 +3690,6 @@ getparm  phy                   ;preserve
          rts                   ;done
 ;
 @0000040	
-	;.rept 3               ;clean up stack
-         pla
-         pla
-         pla
-	;.endr
          jmp monerr            ;abort w/error
 ;
 ;===============================================================================
