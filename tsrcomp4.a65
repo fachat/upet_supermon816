@@ -1,0 +1,338 @@
+
+base		=$0800
+	.(
+
+monentry	=base+0
+monceprocess	=base+3
+
+;	.word *+2
+;
+;       Set _ORIGIN_ to Supermon 816's desired assembly address.
+;       =======================================================================
+;
+;       =======================================================================
+upvecexit  =$00b3ff              ;exit to environment address...
+;
+;       Set VECEXIT to where Supermon 816 should go when it exits.  Supermon 816
+;       will do a JML (long jump) to this address, which means VECEXIT must be a
+;       24 bit address.
+;       =======================================================================
+;
+;       =======================================================================
+vecbrki  =$0092                ;BRK handler indirect vector...
+;
+;       Supermon 816 will modify this vector so that execution of a BRK instruc-
+;       tion is intercepted & the registers  are  captured.   Your BRK front end
+;       should jump through this vector after pushing the registers as follows:
+;
+;                phb                   ;save DB
+;                phd                   ;save DP
+;                rep #%00110000        ;16 bit registers
+;                pha
+;                phx
+;                phy
+;                jmp (vecbrki)         ;indirect vector
+;
+;       When a G or J command is issued, the above sequence will be reversed be-
+;       fore a jump is made to the code to be executed.  Upon exit from Supermon
+;       816, the original address at VECBRKI will be restored.  Note that this
+;       vector must be in bank $00.
+;
+;       If your BRK front end doesn't conform to the above you will have to mod-
+;       ify Supermon 816 to accommodate the differences.  The most likely needed
+;       changes will be in the order in which registers are pushed to the stack.
+;       =======================================================================
+;
+;       =======================================================================
+;putcha   =$00ffff              ;print character on console...
+;
+;       PUTCHA refers to an operating system API call that prints a character to
+;       the console screen.  The character to be printed will be in .A, which
+;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
+;       until the character can be processed.  PUTCHA will be called with a JSR
+;       instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
+;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
+;       character" routine works differently than described.
+;       =======================================================================
+;
+
+&monstart	
+	sei
+	clc		; go into native mode
+	xce
+
+	rep #m_seta
+	.al
+
+	; set direct register
+	lda #directpage
+	tcd
+
+         sep #m_setr           ;8 bit registers
+        .xs
+        .as
+
+	; returns length of pre-filled data in ibuf in x
+	jsr monentry
+@loop
+	jsr input
+
+	; returns length of pre-filled data in ibuf in x
+	jsr monceprocess
+
+	bra @loop	
+
+	; set assembler to absolute mode to trick it into
+	; adding text and zp labels (relocation doesn't work)
+	*=0
+d_ibuffer	=directpage + ibuffer
+d_ibufidx	=directpage + ibufidx
+	*=
+
+input	.(
+	php
+	rep #m_seta
+	.al
+	lda #0
+	tcd		; direct page to zero
+	sec
+	xce		; emulation mode
+	.as
+	.xs
+	cli
+	; here we are in emulation mode, x has the 
+	; starting index in ibuf, which goes until ibuf_s
+loop
+	jsr $ffcf
+	jsr to_ascii
+
+	cmp #a_del	; above ASCII?
+	bcs x30		; yes, ignored
+	cmp #a_ht	; horizontal tab?
+	bne x20		; no
+	lda #a_blank	; replace tab with space
+x20	cmp #a_blank	; control char?
+	bcc x40		; yes
+
+	; check if prompt as first char?
+	cmp #a_prompt
+	bne x21
+	cpx d_ibufidx	; is first char?
+	bne x21
+	ldx #0		; reset input buffer pointer
+
+x21	cpx #s_ibuf	; room in buffer?
+	bcs x30		; no
+
+	sta d_ibuffer,x
+	inx
+	bra loop
+	
+	; invalid char of buffer len - output bel? TODO
+x30	bra loop
+
+	; other control chars
+x50	bra loop
+
+	; control chars
+x40	cmp #a_cr	; carriage return?
+	bne x50		; no
+	stz d_ibuffer,x
+	stz d_ibufidx
+
+	sei
+	clc
+	xce		; back to native mode
+	rep #m_seta
+	.al
+	lda #directpage
+	tcd
+	lda #0
+	plp
+	.as
+	.xs
+	rts
+	.)
+
+&monvecexit	
+	rep #m_seta
+	.al
+
+	pla		; pull return address
+
+	; reset direct register
+	lda #0
+	tcd
+
+	sec		; go into emulation mode
+	xce
+	cli
+	; 
+	jmp upvecexit
+
+	.xs
+	.as
+
+;
+;teststop: TEST FOR STOP KEY
+;
+;       -----------------------------------------------------------------------
+;       Preparatory Ops: none
+;        
+;       Returned Values: .A: detected keypress, if any
+;                        .X: entry value
+;                        .Y: entry value
+;
+;       MPU Flags: NVmxDIZC
+;                  ||||||||
+;                  |||||||+<97><97><97>> 0: normal key detected
+;                  |||||||      1: <STOP> detected
+;                  +++++++<97><97><97><97>> not defined
+;        
+;       Example: jsr teststop
+;                bcs stopped   
+;        
+;       Notes: The symbol STOPKEY defines the ASCII
+;              value of the "stop key."
+;       -----------------------------------------------------------------------
+
+	.as
+	.xs
+
+monteststop .(
+	php
+	rep #m_setr
+	.al
+	phx
+	phy
+	lda #0
+	tcd
+	sep #m_setr + 1		; also set carry to go emulation mode
+	.as
+	xce
+	cli
+	jsr $f335
+	bne nostp
+	lda #1
+	.byt $2c
+nostp	lda #0
+	sei
+	clc
+	xce			; native mode
+	rep #m_setr
+	.al
+	pha
+	lda #directpage
+	tcd
+	pla
+	ply
+	plx
+	plp			; restore register width from above
+	lsr			; shift ac.0 into c
+	rts
+	.)
+
+; ------------------------------------------------------
+;putcha   =$00ffff              ;print character on console...
+;        
+;       PUTCHA refers to an operating system API call that prints a character to
+;       the console screen.  The character to be printed will be in .A, which
+;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
+;       until the character can be processed.  PUTCHA will be called with a JSR
+;       instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
+;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
+;       character" routine works differently than described.
+;
+; NOTE: supermon816 calls this with X set or cleared, depending on location,
+;	so we need to save/restore it using php/plp
+
+	.(
+	.as
+	.xl
+&monputcha
+	php			; save processor state, incl. X/M bits
+	rep #m_setr
+	.al
+	phx
+	phy
+	and #$00ff
+	pha
+	lda #0
+	tcd
+	pla
+	sep #m_setx+m_seta
+	.xs
+	.as
+	sec
+	xce			; emulation mode
+	cli
+	jsr to_petscii
+	bcs noprint
+	jsr $ffd2
+noprint	sei
+	clc
+	xce			; native mode
+	rep #m_setx+m_seta 
+	.xl
+	.al
+	pha
+	lda #directpage
+	tcd
+	pla
+	ply
+	plx
+	plp			; restore X/M bits
+	rts
+	.)
+
+	.(
+	.as
+	.xs
+&to_petscii 
+	cmp #7		; bel - printed during input, resets editor input
+	beq nok
+	cmp #$0d	; carriage return
+	beq cremu	; emulated with CR+CRUP
+	cmp #$0a	; line feed
+	beq lfemu
+	cmp #64
+	bcc ok
+	cmp #96
+	bcc shifted
+	sbc #32+128
+shifted	eor #128	
+ok	clc
+nok	rts
+
+lfemu	lda #0
+	sta $cd		; disable quote mode
+	lda #$11	; crsr down
+	bne ok
+cremu	lda $e2		; set column to start of line
+	sta $c6		;
+	sec
+	rts
+	.)
+
+	.as
+	.xs
+&to_ascii .(
+	cmp #64
+	bcc ok
+	cmp #96
+	bcs shifted
+	adc #32+128
+shifted	eor #128	
+ok	rts
+	.)
+
+; ------------------------------------------------------
+
+
+directpage	=$0800+$1700
+	.)
+
