@@ -1,0 +1,23 @@
+
+
+start	=*
+
+INTVEC816	=$ffee
+BRKVEC816	=$ffe6
+
+		jmp monentry
+		jmp monceprocess
+vecexit		jmp 0			; to be replaced with vecexit
+teststop	jmp 0			; to be replaced with teststop
+putcha		jmp 0			; to be replaced with putcha
+
+	; set assembler to absolute mode to trick it into
+	; adding text and zp labels (relocation doesn't work)
+
+	.al
+	.xl
+
+#include "supermon816.a65"
+
+	.dsb start+6144-*, $aa
+
