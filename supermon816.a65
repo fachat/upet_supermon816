@@ -839,8 +839,8 @@ srinit   =%00000000            ;SR initialization value
 	.zero
 	; input buffer at start of direct page so can be filled
 	; from outside code
-ibuffer
-	.dsb s_ibuf+s_byte
+ibufidx  .dsb s_byte		
+ibuffer  .dsb s_ibuf+s_byte
 
 reg_pbx  .dsb s_mpupbx		;=zeropage             ;PB shadow
 reg_pcx  .dsb s_mpupcx		;=reg_pbx+s_mpupbx     ;PC shadow
@@ -863,7 +863,6 @@ facb     .dsb s_sfac		;=facax+s_pfac         ;secondary accumulator (4 bytes)
 facc     .dsb s_sfac		;=facb+s_sfac          ;tertiary accumulator (4 bytes)
 operand  .dsb s_oper		;=facc+s_sfac          ;instruction operand (3 bytes)
 auxbufix .dsb s_byte		;=operand+s_oper       ;auxiliary buffer index
-ibufidx  .dsb s_byte		;=auxbufix+s_byte      ;input buffer index
 bitsdig  .dsb s_byte		;=ibufidx+s_byte       ;bits per numeral
 numeral  .dsb s_byte		;=bitsdig+s_byte       ;numeral buffer
 radix    .dsb s_byte		;=numeral+s_byte       ;radix index

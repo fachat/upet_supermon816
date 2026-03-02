@@ -1,9 +1,71 @@
 
+MONBANK		=14
+bankreg		=$e801
 base		=$0800
 	.(
 
 monentry	=base+0
 monceprocess	=base+3
+
+directpage	=$1f00
+
+ibufidx		=0
+ibuffer		=ibufidx + s_byte
+
+	; set assembler to absolute mode to trick it into
+	; adding text and zp labels (relocation doesn't work)
+	*=0
+d_ibuffer	=directpage + ibuffer
+d_ibufidx	=directpage + ibufidx
+	*=
+
+;=====================================================
+
+;GLOBAL ATOMIC CONSTANTS                                
+;                                                       
+;                                                       
+;       data type sizes...                              
+;                                                       
+s_byte   =1                    ;byte                    
+s_word   =2                    ;word (16 bits)          
+s_xword  =3                    ;extended word (24 bits) 
+s_dword  =4                    ;double word (32 bits)   
+
+
+;       status register flags...  
+;                                 
+sr_car   =%00000001            ;C 
+sr_zer   =sr_car << 1          ;Z 
+sr_irq   =sr_zer << 1          ;I 
+sr_bdm   =sr_irq << 1          ;D 
+sr_ixw   =sr_bdm << 1          ;x 
+sr_amw   =sr_ixw << 1          ;m 
+sr_ovl   =sr_amw << 1          ;V 
+sr_neg   =sr_ovl << 1          ;N 
+
+m_seta   =sr_amw               ;accumulator/memory        
+m_setx   =sr_ixw               ;index                     
+m_setr   =m_seta|m_setx        ;accumulator/memory & index
+
+;ASCII CONTROL DEFINITIONS (menmonic order)                                
+;                                                                          
+a_bs     =$08                  ;<BS>  backspace                            
+a_cr     =$0d                  ;<CR>  carriage return                      
+a_del    =$7f                  ;<DEL> delete                               
+a_esc    =$1b                  ;<ESC> escape                               
+a_ht     =$09                  ;<HT>  horizontal tabulation                
+a_lf     =$0a                  ;<LF>  linefeed                             
+;                                                                          
+;                                                                          
+;       miscellaneous (description order)...                               
+;                                                                          
+a_blank  =' '                  ;blank (whitespace)                         
+                                                                           
+a_prompt ='.'                  ; assembler prompt char                     
+
+s_ibuf   =80                   ;input buffer; 80 col screen 
+
+;=====================================================
 
 ;	.word *+2
 ;
@@ -74,6 +136,9 @@ vecbrki  =$0092                ;BRK handler indirect vector...
         .xs
         .as
 
+	lda #MONBANK
+	sta bankreg
+
 	; returns length of pre-filled data in ibuf in x
 	jsr monentry
 @loop
@@ -84,12 +149,6 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 
 	bra @loop	
 
-	; set assembler to absolute mode to trick it into
-	; adding text and zp labels (relocation doesn't work)
-	*=0
-d_ibuffer	=directpage + ibuffer
-d_ibufidx	=directpage + ibufidx
-	*=
 
 input	.(
 	php
@@ -101,6 +160,7 @@ input	.(
 	xce		; emulation mode
 	.as
 	.xs
+	sta bankreg	; to zero, i.e. default 
 	cli
 	; here we are in emulation mode, x has the 
 	; starting index in ibuf, which goes until ibuf_s
@@ -143,6 +203,8 @@ x40	cmp #a_cr	; carriage return?
 	stz d_ibufidx
 
 	sei
+	lda #MONBANK
+	sta bankreg
 	clc
 	xce		; back to native mode
 	rep #m_seta
@@ -168,6 +230,9 @@ x40	cmp #a_cr	; carriage return?
 
 	sec		; go into emulation mode
 	xce
+
+	lda #0
+	sta bankreg
 	cli
 	; 
 	jmp upvecexit
@@ -212,14 +277,20 @@ monteststop .(
 	sep #m_setr + 1		; also set carry to go emulation mode
 	.as
 	xce
+	lda #0
+	sta bankreg 
 	cli
 	jsr $f335
-	bne nostp
-	lda #1
-	.byt $2c
-nostp	lda #0
 	sei
-	clc
+	bne nostp
+	lda #MONBANK
+	sta bankreg
+	lda #1
+	bne exitstp
+nostp	lda #MONBANK
+	sta bankreg
+	lda #0
+exitstp	clc
 	xce			; native mode
 	rep #m_setr
 	.al
@@ -269,11 +340,15 @@ nostp	lda #0
 	.as
 	sec
 	xce			; emulation mode
+	ldx #0
+	stx bankreg
 	cli
 	jsr to_petscii
 	bcs noprint
 	jsr $ffd2
 noprint	sei
+	ldx #MONBANK
+	stx bankreg
 	clc
 	xce			; native mode
 	rep #m_setx+m_seta 
@@ -332,7 +407,5 @@ ok	rts
 
 ; ------------------------------------------------------
 
-
-directpage	=$0800+$1700
 	.)
 
