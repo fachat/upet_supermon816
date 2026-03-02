@@ -1,0 +1,33 @@
+	
+
+&mon_install4_xl 
+	.(
+monentry	=MONBASE+0
+monceprocess	=MONBASE+3
+
+a_vecexit	=MONBASE+7
+a_teststp	=MONBASE+10
+a_putcha	=MONBASE+13
+
+	lda #MONBANK
+	sta BANK
+
+;	; load monitor into memory
+;	lda #MONPAGE
+;	ldx #base
+;	ldy #$1800
+;	jsr flash2direct3_xl
+
+	; link 
+	ldx #vecexit	
+	stx a_vecexit
+	ldx #teststp
+	stx a_teststp
+	ldx #putcha
+	stx a_putcha
+
+	lda #MAP_BAS
+	sta BANK
+	rts
+	.)
+
