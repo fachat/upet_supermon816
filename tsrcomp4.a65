@@ -325,71 +325,13 @@ exitstp	clc
 	.as
 	.xl
 &monputcha
-	php			; save processor state, incl. X/M bits
-	rep #m_setr
-	.al
-	phx
-	phy
-	and #$00ff
-	pha
-	lda #0
-	tcd
-	pla
-	sep #m_setx+m_seta
-	.xs
-	.as
-	sec
-	xce			; emulation mode
 	ldx #0
 	stx bankreg
 	cli
-	jsr to_petscii
-	bcs noprint
 	jsr $ffd2
-noprint	sei
+	sei
 	ldx #MONBANK
 	stx bankreg
-	clc
-	xce			; native mode
-	rep #m_setx+m_seta 
-	.xl
-	.al
-	pha
-	lda #directpage
-	tcd
-	pla
-	ply
-	plx
-	plp			; restore X/M bits
-	rts
-	.)
-
-	.(
-	.as
-	.xs
-&to_petscii 
-	cmp #7		; bel - printed during input, resets editor input
-	beq nok
-	cmp #$0d	; carriage return
-	beq cremu	; emulated with CR+CRUP
-	cmp #$0a	; line feed
-	beq lfemu
-	cmp #64
-	bcc ok
-	cmp #96
-	bcc shifted
-	sbc #32+128
-shifted	eor #128	
-ok	clc
-nok	rts
-
-lfemu	lda #0
-	sta $cd		; disable quote mode
-	lda #$11	; crsr down
-	bne ok
-cremu	lda $e2		; set column to start of line
-	sta $c6		;
-	sec
 	rts
 	.)
 

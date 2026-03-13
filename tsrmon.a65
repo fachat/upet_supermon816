@@ -2,17 +2,102 @@
 
 start	=*
 
-INTVEC816	=$ffee
-BRKVEC816	=$ffe6
+directpage	=$1f00
 
 		jmp monentry
 		jmp monceprocess
 vecexit		jmp 0			; to be replaced with vecexit
 teststop	jmp 0			; to be replaced with teststop
-putcha		jmp 0			; to be replaced with putcha
+x_putcha	jmp 0			; to be replaced with putcha
 
 	; set assembler to absolute mode to trick it into
 	; adding text and zp labels (relocation doesn't work)
+
+; ------------------------------------------------------
+;putcha   =$00ffff              ;print character on console...
+;        
+;       PUTCHA refers to an operating system API call that prints a character to
+;       the console screen.  The character to be printed will be in .A, which
+;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
+;       until the character can be processed.  PUTCHA will be called with a JSR
+;       instruction.
+;
+;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
+;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
+;       character" routine works differently than described.
+;
+; NOTE: supermon816 calls this with X set or cleared, depending on location,
+;       so we need to save/restore it using php/plp
+
+        .(
+        .as
+        .xl
+&putcha
+        php                     ; save processor state, incl. X/M bits
+        rep #m_setr
+        .al
+        phx
+        phy
+        and #$00ff
+        pha
+        lda #0
+        tcd
+        pla
+        sep #m_setx+m_seta
+        .xs
+        .as
+        sec
+        xce                     ; emulation mode
+        jsr to_petscii
+	bcs noprint
+
+	jsr x_putcha
+
+noprint
+        clc
+        xce                     ; native mode
+        rep #m_setx+m_seta
+        .xl
+        .al
+        pha
+        lda #directpage
+        tcd
+        pla
+        ply
+        plx
+        plp                     ; restore X/M bits
+        rts
+        .)
+
+        .(
+        .as
+        .xs
+&to_petscii
+        cmp #7          ; bel - printed during input, resets editor input
+        beq nok
+        cmp #$0d        ; carriage return
+        beq cremu       ; emulated with CR+CRUP
+        cmp #$0a        ; line feed
+        beq lfemu
+        cmp #64
+        bcc ok
+        cmp #96
+        bcc shifted
+        sbc #32+128
+shifted eor #128
+ok      clc
+nok     rts
+
+lfemu   lda #0
+        sta $cd         ; disable quote mode
+        lda #$11        ; crsr down
+        bne ok
+cremu   lda $e2         ; set column to start of line
+        sta $c6         ;
+        sec
+        rts
+        .)
+
 
 	.al
 	.xl
