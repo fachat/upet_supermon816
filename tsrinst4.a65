@@ -1,6 +1,7 @@
 	
 
 &mon_install4_xl 
+	.xl
 	.(
 monentry	=MONBASE+0
 monceprocess	=MONBASE+3
@@ -12,22 +13,24 @@ a_putcha	=MONBASE+13
 	lda #MONBANK
 	sta BANK
 
-;	; load monitor into memory
-;	lda #MONPAGE
-;	ldx #base
-;	ldy #$1800
-;	jsr flash2direct3_xl
+	ldx #0
+mvloop	lda MOVE,x
+	sta MONCOMP,x
+	inx
+	cpx #MOVEND-MOVE
+	bcc mvloop
 
 	; link 
-	ldx #vecexit	
+	ldx #monvecexit	
 	stx a_vecexit
-	ldx #teststp
+	ldx #monteststp
 	stx a_teststp
-	ldx #putcha
+	ldx #monputcha
 	stx a_putcha
 
 	lda #MAP_BAS
 	sta BANK
 	rts
 	.)
+	.xs
 

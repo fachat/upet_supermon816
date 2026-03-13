@@ -1,23 +1,24 @@
 
-MONBANK		=14
-bankreg		=$e801
-base		=$0800
+#print MONBANK
+#print directpage
+
+;MONBANK		=14
+bankreg		=$e802
+
 	.(
 
-monentry	=base+0
-monceprocess	=base+3
-
-directpage	=$1f00
+monentry	=MONBASE+0
+monceprocess	=MONBASE+3
 
 ibufidx		=0
 ibuffer		=ibufidx + s_byte
 
 	; set assembler to absolute mode to trick it into
 	; adding text and zp labels (relocation doesn't work)
-	*=0
+;	*=0
 d_ibuffer	=directpage + ibuffer
 d_ibufidx	=directpage + ibufidx
-	*=
+;	*=
 
 ;=====================================================
 
@@ -218,7 +219,7 @@ x40	cmp #a_cr	; carriage return?
 	rts
 	.)
 
-&monvecexit	
+&&monvecexit	
 	rep #m_seta
 	.al
 
@@ -266,7 +267,7 @@ x40	cmp #a_cr	; carriage return?
 	.as
 	.xs
 
-monteststop .(
+&monteststp .(
 	php
 	rep #m_setr
 	.al
@@ -321,10 +322,10 @@ exitstp	clc
 ; NOTE: supermon816 calls this with X set or cleared, depending on location,
 ;	so we need to save/restore it using php/plp
 
-	.(
 	.as
-	.xl
+	.xs
 &monputcha
+	.(
 	ldx #0
 	stx bankreg
 	cli

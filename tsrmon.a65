@@ -2,7 +2,7 @@
 
 start	=*
 
-directpage	=$1f00
+;directpage	=$1f00
 
 		jmp monentry
 		jmp monceprocess
