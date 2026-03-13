@@ -176,6 +176,9 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 	sec		; go into emulation mode
 	xce
 
+	.xs
+	.as
+
 	lda #0
 	sta bankreg
 	cli
@@ -271,23 +274,23 @@ exitstp	clc
 	ldx #0
 	stx bankreg
 	cli
-	jsr $ffd2
-	sei
+	cmp #$0d
+	beq cremu
+	cmp #$0a
+	beq lfemu
+ok	jsr $ffd2
+xit	sei
 	ldx #MONBANK
 	stx bankreg
 	rts
-	.)
 
-	.as
-	.xs
-&to_ascii .(
-	cmp #64
-	bcc ok
-	cmp #96
-	bcs shifted
-	adc #32+128
-shifted	eor #128	
-ok	rts
+lfemu   lda #0
+        sta $cd         ; disable quote mode
+        lda #$11        ; crsr down
+        bne ok
+cremu   lda $e2         ; set column to start of line
+        sta $c6         ;
+        bra xit
 	.)
 
 ; ------------------------------------------------------

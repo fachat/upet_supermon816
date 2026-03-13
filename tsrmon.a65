@@ -81,10 +81,6 @@ noprint
 &to_petscii
         cmp #7          ; bel - printed during input, resets editor input
         beq nok
-        cmp #$0d        ; carriage return
-        beq cremu       ; emulated with CR+CRUP
-        cmp #$0a        ; line feed
-        beq lfemu
         cmp #64
         bcc ok
         cmp #96
@@ -93,15 +89,6 @@ noprint
 shifted eor #128
 ok      clc
 nok     rts
-
-lfemu   lda #0
-        sta $cd         ; disable quote mode
-        lda #$11        ; crsr down
-        bne ok
-cremu   lda $e2         ; set column to start of line
-        sta $c6         ;
-        sec
-        rts
         .)
 
 ; ------------------------------------------------------
