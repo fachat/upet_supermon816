@@ -4,11 +4,17 @@ start	=*
 
 ;directpage	=$1f00
 
+d_ibuffer       =directpage + ibuffer
+d_ibufidx       =directpage + ibufidx
+
+
 		jmp monentry
 		jmp monceprocess
+		jmp moninput
 vecexit		jmp 0			; to be replaced with vecexit
 teststop	jmp 0			; to be replaced with teststop
 x_putcha	jmp 0			; to be replaced with putcha
+x_getcha	jmp 0			; to be replaced with call to getcha
 
 	; set assembler to absolute mode to trick it into
 	; adding text and zp labels (relocation doesn't work)
@@ -98,6 +104,84 @@ cremu   lda $e2         ; set column to start of line
         rts
         .)
 
+; ------------------------------------------------------
+; input loop 
+
+moninput .(
+        php
+        rep #m_seta
+        .al
+        lda #0
+        tcd             ; direct page to zero
+        sec
+        xce             ; emulation mode
+        .as
+        .xs
+        ; here we are in emulation mode, x has the 
+        ; starting index in ibuf, which goes until ibuf_s
+loop
+        jsr x_getcha
+
+        jsr to_ascii
+
+        cmp #a_del      ; above ASCII?
+        bcs x30         ; yes, ignored
+        cmp #a_ht       ; horizontal tab?
+        bne x20         ; no
+        lda #a_blank    ; replace tab with space
+x20     cmp #a_blank    ; control char?
+        bcc x40         ; yes
+
+        ; check if prompt as first char?
+        cmp #a_prompt
+        bne x21
+        cpx d_ibufidx   ; is first char?
+        bne x21
+        ldx #0          ; reset input buffer pointer
+
+x21     cpx #s_ibuf     ; room in buffer?
+        bcs x30         ; no
+
+        sta d_ibuffer,x
+        inx
+        bra loop
+
+        ; invalid char of buffer len - output bel? TODO
+x30     bra loop
+
+        ; other control chars
+x50     bra loop
+
+        ; control chars
+x40     cmp #a_cr       ; carriage return?
+        bne x50         ; no
+        stz d_ibuffer,x
+        stz d_ibufidx
+
+        clc
+        xce             ; back to native mode
+        rep #m_seta
+        .al
+        lda #directpage
+        tcd
+        lda #0
+        plp
+        .as
+        .xs
+        rts
+        .)
+
+        .as
+        .xs
+&to_ascii .(
+        cmp #64
+        bcc ok
+        cmp #96
+        bcs shifted
+        adc #32+128
+shifted eor #128
+ok      rts
+        .)
 
 	.al
 	.xl

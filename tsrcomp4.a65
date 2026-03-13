@@ -9,15 +9,16 @@ bankreg		=$e802
 
 monentry	=MONBASE+0
 monceprocess	=MONBASE+3
+moninput	=MONBASE+6
 
-ibufidx		=0
-ibuffer		=ibufidx + s_byte
+;ibufidx		=0
+;ibuffer		=ibufidx + s_byte
 
 	; set assembler to absolute mode to trick it into
 	; adding text and zp labels (relocation doesn't work)
 ;	*=0
-d_ibuffer	=directpage + ibuffer
-d_ibufidx	=directpage + ibufidx
+;d_ibuffer	=directpage + ibuffer
+;d_ibufidx	=directpage + ibufidx
 ;	*=
 
 ;=====================================================
@@ -143,7 +144,7 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 	; returns length of pre-filled data in ibuf in x
 	jsr monentry
 @loop
-	jsr input
+	jsr moninput
 
 	; returns length of pre-filled data in ibuf in x
 	jsr monceprocess
@@ -151,75 +152,18 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 	bra @loop	
 
 
-input	.(
-	php
-	rep #m_seta
-	.al
+&&mongetcha .(
 	lda #0
-	tcd		; direct page to zero
-	sec
-	xce		; emulation mode
-	.as
-	.xs
-	sta bankreg	; to zero, i.e. default 
-	cli
-	; here we are in emulation mode, x has the 
-	; starting index in ibuf, which goes until ibuf_s
-loop
-	jsr $ffcf
-	jsr to_ascii
-
-	cmp #a_del	; above ASCII?
-	bcs x30		; yes, ignored
-	cmp #a_ht	; horizontal tab?
-	bne x20		; no
-	lda #a_blank	; replace tab with space
-x20	cmp #a_blank	; control char?
-	bcc x40		; yes
-
-	; check if prompt as first char?
-	cmp #a_prompt
-	bne x21
-	cpx d_ibufidx	; is first char?
-	bne x21
-	ldx #0		; reset input buffer pointer
-
-x21	cpx #s_ibuf	; room in buffer?
-	bcs x30		; no
-
-	sta d_ibuffer,x
-	inx
-	bra loop
-	
-	; invalid char of buffer len - output bel? TODO
-x30	bra loop
-
-	; other control chars
-x50	bra loop
-
-	; control chars
-x40	cmp #a_cr	; carriage return?
-	bne x50		; no
-	stz d_ibuffer,x
-	stz d_ibufidx
-
-	sei
-	lda #MONBANK
 	sta bankreg
-	clc
-	xce		; back to native mode
-	rep #m_seta
-	.al
-	lda #directpage
-	tcd
-	lda #0
-	plp
-	.as
-	.xs
+	cli
+	jsr $ffcf
+	sei
+	ldy #MONBANK
+	sty bankreg
 	rts
 	.)
 
-&&monvecexit	
+&&monvecexit .(
 	rep #m_seta
 	.al
 
@@ -237,9 +181,7 @@ x40	cmp #a_cr	; carriage return?
 	cli
 	; 
 	jmp upvecexit
-
-	.xs
-	.as
+	.)
 
 ;
 ;teststop: TEST FOR STOP KEY

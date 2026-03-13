@@ -5,10 +5,12 @@
 	.(
 monentry	=MONBASE+0
 monceprocess	=MONBASE+3
+moninput	=MONBASE+6
 
-a_vecexit	=MONBASE+7
-a_teststp	=MONBASE+10
-a_putcha	=MONBASE+13
+a_vecexit	=MONBASE+9+1
+a_teststp	=MONBASE+12+1
+a_putcha	=MONBASE+15+1
+a_getcha	=MONBASE+18+1
 
 	lda #MONBANK
 	sta BANK
@@ -27,6 +29,8 @@ mvloop	lda MOVE,x
 	stx a_teststp
 	ldx #monputcha
 	stx a_putcha
+	ldx #mongetcha
+	stx a_getcha
 
 	lda #MAP_BAS
 	sta BANK
