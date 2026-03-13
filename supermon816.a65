@@ -3578,6 +3578,14 @@ facaddra ldx #s_xword-1
          dex
          bpl @0000010
 ;
+	; upet bank0 mapping
+	lda addra+s_byte	; high byte
+	bmi @0000011		; upper half not modified
+	lda addra+s_word	; bank
+	bne @0000011		; only bank 0 is mapped
+	ora #$f0
+	sta addra+s_word	; bank
+@0000011
          rts
 ;
 ;===============================================================================
@@ -3592,6 +3600,14 @@ facaddrb ldx #s_xword-1
          dex
          bpl @0000010
 ;
+	; upet bank0 mapping
+	lda addrb+s_byte	; high byte
+	bmi @0000011		; upper half not modified
+	lda addrb+s_word	; bank
+	bne @0000011		; only bank 0 is mapped
+	ora #$f0
+	sta addrb+s_word	; bank
+@0000011
          rts
 ;
 ;===============================================================================
