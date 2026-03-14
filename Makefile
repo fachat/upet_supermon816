@@ -19,8 +19,11 @@ sermon.o65: sermon.a65 supermon816.a65
 tsrmon.o65: tsrmon.a65 supermon816.a65
 	xa -XCA65 -R -w -bt 20480 $(DEFS) -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
 
-%.o65: %.a65
-	xa -XCA65 -R -w $(DEFS) -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
+tsrcomp4.o65: tsrcomp4.a65 
+	xa -XCA65 -R -w -bt 54386 $(DEFS) -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
+
+#%.o65: %.a65
+#	xa -XCA65 -R -w $(DEFS) -l $(basename $@).lab -P $(basename $@).lst -o $@ $<
 
 %: %.o65
 	reloc65 -v -X -o $@ $<

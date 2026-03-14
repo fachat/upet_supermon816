@@ -15,12 +15,26 @@ monentry40	=MONBASE+3
 	lda #MONBANK
 	sta BANK
 
+        ; clear out monitor area              
+        ; $d4b3 - d7a3                        
+        .( 
+        lda #$ea        ; NOP opcode          
+        ldy #0
+l1      sta $d472,y     ; monitor code        
+        iny
+        cpy #$d7a3-$d472
+        bcc l1
+	.)
+
+	; copy over companion code
+	.(
 	ldx #0
 mvloop	lda MOVE,x
 	sta MONCOMP,x
 	inx
 	cpx #MOVEND-MOVE
 	bcc mvloop
+	.)
 
 	; link 
 	ldx #monvecexit	
@@ -40,6 +54,7 @@ mvloop	lda MOVE,x
 
 	ldx #monentry40
 	stx a_monentry
+	stx a_monentry2
 
 	ldx #$00a9	; lda #$00
 	stx cremu

@@ -11,6 +11,9 @@ monentry80	=MONBASE+0
 monentry40	=MONBASE+3
 monceprocess	=MONBASE+6
 moninput	=MONBASE+9
+monsetreg	=MONBASE+24
+monreg		=MONBASE+27
+
 
 ;=====================================================
 
@@ -34,12 +37,25 @@ m_setr   =m_seta|m_setx        ;accumulator/memory & index
 
 upvecexit  =$00b3ff              ;exit to environment address...
 ;
-vecbrki  =$0092                ;BRK handler indirect vector...
+;vecbrki  =$0092                ;BRK handler indirect vector...
 ;
 
 ;=======================================================================
 
+	.assert * == $d472, "monitor call entry"
 &monstart	
+	lda #"C"
+	sta $b5
+	bne do_start
+	.assert * == $d478, "BRK monitor entry"
+&monbrk
+	lda #"B"
+	sta $b5
+	bne do_brk
+
+;=======================================================================
+
+do_start
 	sei
 	clc		; go into native mode
 	xce
@@ -62,14 +78,52 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 &a_monentry = *+1
 	; returns length of pre-filled data in ibuf in x
 	jsr monentry80
-@loop
+
+	jsr monreg
+do_loop
 	jsr moninput
 
 	; returns length of pre-filled data in ibuf in x
 	jsr monceprocess
 
-	bra @loop	
+	bra do_loop	
 
+;=======================================================================
+; in BRK, the stack contains the 8 bit registers Y, X, A, P, and 16 bit  PC
+; we pull it, and write it into the direct page register vars
+
+do_brk	sei
+
+	clc		; go into native mode
+	xce
+
+	rep #m_seta
+	.al
+
+	; set direct register
+	lda #directpage
+	tcd
+
+         sep #m_setr           ;8 bit registers
+        .xs
+        .as
+
+	lda #MONBANK
+	sta bankreg
+
+	; to patch in monentry40 on 40 col modes
+&a_monentry2 = *+1
+	; returns length of pre-filled data in ibuf in x
+	jsr monentry80
+
+	jsr monsetreg
+
+	sec
+	jsr monreg
+
+	jmp do_loop	
+
+;=======================================================================
 
 &&mongetcha .(
 	lda #0

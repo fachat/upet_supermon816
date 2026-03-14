@@ -1045,16 +1045,6 @@ monentry0
          sta reg_srx           ;status register
          rep #m_seta      
 	.al
-; do not touch stack
-;         lda #!hwstack         ;top of hardware stack
-;         tcs                   ;set SP...
-;
-;			-------------------------------------------------------
-;			The stack pointer initialization is an optional step
-;			that could be removed if Supermon 816 is made part
-;			of system firware.
-;			-------------------------------------------------------
-;
          tdc                   ;get & save DP...
          sta reg_dpx           ;into shadow register
 
@@ -1145,6 +1135,9 @@ moncom   jsr sprint            ;print heading
          ;rep #%11111111        ;clear SR &...
          rep #%11111011        ;clear SR &... except IRQ
          sep #srinit | sr_car  ;set default state...
+
+
+	rts
 ;
 ;			-------------------------------------
 ;			The above implicitly sets carry.  See
@@ -4302,81 +4295,6 @@ input_init
 	 ldx ibufidx
 	rts
 
-;         ldx ibufidx           ;starting buffer index
-;;
-;;
-;;	main input loop...
-;;
-;@0000010 jsr getcha            ;poll for input
-;         bcs @0000060          ;nothing
-;;
-;         cmp #a_del            ;above ASCII range?
-;         bcs @0000030          ;yes, not allowed
-;;
-;         cmp #a_ht             ;horizontal tab?
-;         bne @0000020          ;no
-;;
-;         lda #a_blank          ;replace <HT> w/blank
-;;
-;@0000020 cmp #a_blank          ;control char?
-;         bcc @0000040          ;yes
-;;
-;;	check if prompt as first char
-;	cmp #a_prompt
-;	bne @0000021
-;	cpx ibufidx		; are we on the start?
-;	bne @0000021
-;	ldx #0			; reset the input buffer pointer
-;;
-;;	process QWERTY character...
-;;
-;@0000021 cpx #s_ibuf           ;room in buffer?
-;         bcs @0000030          ;no
-;;
-;         sta ibuffer,x         ;store char
-;         inx                   ;bump index
-;         ;.byte bitabs          ;echo char
-;         bra @0000010          ;get some more
-;;
-;@0000030 lda #a_bel            ;alert user
-;         jsr putcha
-;         bra @0000010          ;get some more
-;;
-;;
-;;	process carriage return...
-;;
-;@0000040 cmp #a_cr             ;carriage return?
-;         bne @0000050          ;no
-;;
-;         phx                   ;protect input count
-;         pea dc_co
-;         jsr sprint            ;cursor off
-;         plx                   ;recover input count
-;         stz ibuffer,x         ;terminate input
-;         stz ibufidx           ;reset buffer index
-;         rts                   ;done
-;;
-;;
-;;	process backspace...
-;;
-;@0000050 cmp #a_bs             ;backspace?
-;         bne @0000010          ;no
-;;
-;         txa
-;         beq @0000010          ;no input, ignore <BS>
-;;
-;         dex                   ;1 less char
-;         phx                   ;preserve count
-;         jsr gendbs            ;destructive backspace
-;         plx                   ;restore count
-;         bra @0000010          ;get more input
-;;
-;;
-;;	waiting loop...
-;;
-;@0000060 ;wai                   ;wait for datum
-;         bra @0000010
-;
 ;===============================================================================
 ;
 ;lodbnk: LOAD SOURCE & DESTINATION BANKS
@@ -4555,7 +4473,7 @@ rcvltab  .byte s_mpupbx+s_byte ; PB
          .byte s_mpudpx+s_byte ; DP
          .byte s_mpudbx+s_byte ; DB
 n_regchv =*-rcvltab            ;total shadow registers
-;
+
 ;===============================================================================
 ;
 ;ASSEMBLER/DISASSEMBLER DATA TABLES

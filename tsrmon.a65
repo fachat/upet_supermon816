@@ -16,6 +16,9 @@ vecexit		jmp 0			; to be replaced with vecexit
 teststop	jmp 0			; to be replaced with teststop
 x_putcha	jmp 0			; to be replaced with putcha
 x_getcha	jmp 0			; to be replaced with call to getcha
+		jmp monsetreg		; set register vals (from brk)
+		jmp monreg
+
 
 	; set assembler to absolute mode to trick it into
 	; adding text and zp labels (relocation doesn't work)
@@ -170,6 +173,72 @@ x40     cmp #a_cr       ; carriage return?
 shifted eor #128
 ok      rts
         .)
+
+; ------------------------------------------------------
+; monsetreg
+;
+; nasty hack to get the registers from the main memory 
+; stack
+; 
+; the low32k are mapped for the monitor code, but stack is
+; in the original memory map. So, we need to pull it from
+; there
+;
+	.as
+	.xs
+monsetreg
+	tsx
+
+	php
+	sep #m_setr
+
+	; skip current return address
+	inx
+	inx
+
+	inx
+	lda $f00100,x
+	;sta <reg_yx
+	.byt $85, reg_yx
+	lda #0
+	;sta <reg_yx+1
+	.byt $85, reg_yx+1
+
+	inx
+	lda $f00100,x
+	;sta <reg_xx
+	.byt $85, reg_xx
+	lda #0
+	;sta <reg_xx+1
+	.byt $85, reg_xx+1
+
+	inx
+	lda $f00100,x
+	;sta <reg_ax
+	.byt $85, reg_ax
+	lda #0
+	;sta <reg_ax+1
+	.byt $85, reg_ax+1
+
+	inx
+	lda $f00100,x
+	;sta <reg_srx
+	.byt $85, reg_srx
+	
+	inx
+	lda $f00100,x
+	;sta <reg_pcx
+	.byt $85, reg_pcx
+	inx
+	lda $f00100,x
+	;sta reg_pcx+1
+	.byt $85, reg_pcx+1
+
+	plp
+
+	rts
+
+; ------------------------------------------------------
 
 	.al
 	.xl
