@@ -7,33 +7,15 @@ bankreg		=$e802
 
 	.(
 
-monentry	=MONBASE+0
-monceprocess	=MONBASE+3
-moninput	=MONBASE+6
-
-;ibufidx		=0
-;ibuffer		=ibufidx + s_byte
-
-	; set assembler to absolute mode to trick it into
-	; adding text and zp labels (relocation doesn't work)
-;	*=0
-;d_ibuffer	=directpage + ibuffer
-;d_ibufidx	=directpage + ibufidx
-;	*=
+monentry80	=MONBASE+0
+monentry40	=MONBASE+3
+monceprocess	=MONBASE+6
+moninput	=MONBASE+9
 
 ;=====================================================
 
 ;GLOBAL ATOMIC CONSTANTS                                
 ;                                                       
-;                                                       
-;       data type sizes...                              
-;                                                       
-s_byte   =1                    ;byte                    
-s_word   =2                    ;word (16 bits)          
-s_xword  =3                    ;extended word (24 bits) 
-s_dword  =4                    ;double word (32 bits)   
-
-
 ;       status register flags...  
 ;                                 
 sr_car   =%00000001            ;C 
@@ -49,78 +31,13 @@ m_seta   =sr_amw               ;accumulator/memory
 m_setx   =sr_ixw               ;index                     
 m_setr   =m_seta|m_setx        ;accumulator/memory & index
 
-;ASCII CONTROL DEFINITIONS (menmonic order)                                
-;                                                                          
-a_bs     =$08                  ;<BS>  backspace                            
-a_cr     =$0d                  ;<CR>  carriage return                      
-a_del    =$7f                  ;<DEL> delete                               
-a_esc    =$1b                  ;<ESC> escape                               
-a_ht     =$09                  ;<HT>  horizontal tabulation                
-a_lf     =$0a                  ;<LF>  linefeed                             
-;                                                                          
-;                                                                          
-;       miscellaneous (description order)...                               
-;                                                                          
-a_blank  =' '                  ;blank (whitespace)                         
-                                                                           
-a_prompt ='.'                  ; assembler prompt char                     
 
-s_ibuf   =80                   ;input buffer; 80 col screen 
-
-;=====================================================
-
-;	.word *+2
-;
-;       Set _ORIGIN_ to Supermon 816's desired assembly address.
-;       =======================================================================
-;
-;       =======================================================================
 upvecexit  =$00b3ff              ;exit to environment address...
 ;
-;       Set VECEXIT to where Supermon 816 should go when it exits.  Supermon 816
-;       will do a JML (long jump) to this address, which means VECEXIT must be a
-;       24 bit address.
-;       =======================================================================
-;
-;       =======================================================================
 vecbrki  =$0092                ;BRK handler indirect vector...
 ;
-;       Supermon 816 will modify this vector so that execution of a BRK instruc-
-;       tion is intercepted & the registers  are  captured.   Your BRK front end
-;       should jump through this vector after pushing the registers as follows:
-;
-;                phb                   ;save DB
-;                phd                   ;save DP
-;                rep #%00110000        ;16 bit registers
-;                pha
-;                phx
-;                phy
-;                jmp (vecbrki)         ;indirect vector
-;
-;       When a G or J command is issued, the above sequence will be reversed be-
-;       fore a jump is made to the code to be executed.  Upon exit from Supermon
-;       816, the original address at VECBRKI will be restored.  Note that this
-;       vector must be in bank $00.
-;
-;       If your BRK front end doesn't conform to the above you will have to mod-
-;       ify Supermon 816 to accommodate the differences.  The most likely needed
-;       changes will be in the order in which registers are pushed to the stack.
-;       =======================================================================
-;
-;       =======================================================================
-;putcha   =$00ffff              ;print character on console...
-;
-;       PUTCHA refers to an operating system API call that prints a character to
-;       the console screen.  The character to be printed will be in .A, which
-;       will be set to 8-bit width.  Supermon 816 assumes that PUTCHA will block
-;       until the character can be processed.  PUTCHA will be called with a JSR
-;       instruction.
-;
-;       Supermon 816 expects .X & .Y to be preserved upon return from PUTCHA.
-;       You may have to modify Supermon 816 at all calls to PUTCHA if your "put
-;       character" routine works differently than described.
-;       =======================================================================
-;
+
+;=======================================================================
 
 &monstart	
 	sei
@@ -140,9 +57,11 @@ vecbrki  =$0092                ;BRK handler indirect vector...
 
 	lda #MONBANK
 	sta bankreg
-
+	
+	; to patch in monentry40 on 40 col modes
+&a_monentry = *+1
 	; returns length of pre-filled data in ibuf in x
-	jsr monentry
+	jsr monentry80
 @loop
 	jsr moninput
 

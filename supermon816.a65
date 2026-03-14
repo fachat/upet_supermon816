@@ -839,6 +839,8 @@ srinit   =%00000000            ;SR initialization value
 	.zero
 	; input buffer at start of direct page so can be filled
 	; from outside code
+ndump	 .dsb s_byte
+nmbytes	 .dsb s_word
 ibufidx  .dsb s_byte		
 ibuffer  .dsb s_ibuf+s_byte
 
@@ -1015,7 +1017,19 @@ auxbuf
 ;         sep #m_setr           ;8 bit registers
 	.xs
 	.as
-monentry
+monentry 
+	lda #n_dump
+	ldx #n_mbytes
+	bne monentry0
+monentry40
+	lda #n_dump>>1
+	ldx #n_mbytes>>1
+monentry0
+	sta ndump
+	stx nmbytes
+	lda #0
+	sta nmbytes+1
+
          ldx #vopsflag-reg_pbx
 ;
 @0000010 stz reg_pbx,x         ;clear DP storage
@@ -2057,7 +2071,7 @@ mondmp   bcs @0000010          ;no parameters
 	.al
          clc
          lda addra             ;starting address
-         adc #!n_mbytes        ;default bytes
+         adc nmbytes           ;default bytes
          sta faca              ;effective ending address
          sep #m_seta
 	.as
@@ -2649,7 +2663,7 @@ dpymemprfix:
 ;	ADDRA will point to the start of the next 16 bytes.
 ;	-----------------------------------------------------------------------
 ;
-dpymem   ldy #n_dump           ;bytes per line
+dpymem   ldy ndump           ;bytes per line
 dpymemn  rep #m_seta		; number of bytes in y
          stz charcnt           ;reset
 	 sep #m_setr

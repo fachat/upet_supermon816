@@ -8,7 +8,8 @@ d_ibuffer       =directpage + ibuffer
 d_ibufidx       =directpage + ibufidx
 
 
-		jmp monentry
+		jmp monentry		; 80 col mode
+		jmp monentry40		; 40 col mode
 		jmp monceprocess
 		jmp moninput
 vecexit		jmp 0			; to be replaced with vecexit
