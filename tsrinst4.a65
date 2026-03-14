@@ -40,6 +40,9 @@ mvloop	lda MOVE,x
 
 	ldx #monentry40
 	stx a_monentry
+
+	ldx #$00a9	; lda #$00
+	stx cremu
 is80
 	rts
 	.)

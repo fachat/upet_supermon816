@@ -207,7 +207,7 @@ lfemu   lda #0
         sta $cd         ; disable quote mode
         lda #$11        ; crsr down
         bne ok
-cremu   lda $e2         ; set column to start of line
+&&cremu lda $e2         ; set column to start of line
         sta $c6         ;
         bra xit
 	.)
