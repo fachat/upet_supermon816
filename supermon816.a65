@@ -1175,7 +1175,7 @@ x0000011 jsr sprint            ;display register heading
 ;	display program bank & counter...
 ;
          lda reg_pbx           ;PB
-         jsr dpyhex            ;display as hex ASCII
+         jsr dpyhnyb           ;display as hex ASCII
          jsr printspc          ;inter-field space
          rep #m_seta
 	.al
@@ -1183,8 +1183,6 @@ x0000011 jsr sprint            ;display register heading
          sep #m_seta
 	.as
          jsr dpyhexw           ;display PC
-         ;ldx #2
-         ;jsr multspc           ;inter-field spacing
 	jsr printspc
 ;
 ;
@@ -1210,6 +1208,13 @@ x0000011 jsr sprint            ;display register heading
 ;
 	ldx #0
 @0000030 jsr printspc          ;spacing
+	lda reg_ax+1,x		; high byte
+	bne @wide
+	lda reg_ax,x		; low byte
+	phx
+	jsr dpyhex
+	bra @next
+@wide
          rep #m_seta
 	.al
          lda reg_ax,x          ;get register value
@@ -1217,7 +1222,7 @@ x0000011 jsr sprint            ;display register heading
 	.as
 	phx
          jsr dpyhexw           ;convert & display
-	plx
+@next	plx
 	;.rept s_word
          inx
          inx
@@ -1230,7 +1235,7 @@ x0000011 jsr sprint            ;display register heading
 ;
          jsr printspc          ;more spacing
          lda reg_dbx           ;get DB, ...
-         jsr dpyhex            ;display it & enter executive
+         jsr dpyhnyb           ;display it & enter executive
 ;
 ;===============================================================================
 ;
@@ -2786,6 +2791,15 @@ dpyhex   jsr binhex            ;convert to hex ASCII
          jsr putcha            ;print MSN
          txa
          jmp putcha            ;print LSN
+
+;dpyhnyb: DISPLAY BINARY BYTE AS HEX ASCII, single digit if <16
+;
+dpyhnyb	jsr binhex
+	cmp #'0'
+	beq @single
+	jsr putcha
+@single	txa
+	jmp putcha
 ;
 ;===============================================================================
 ;
@@ -5324,7 +5338,7 @@ mm_prmpt LF
          .byte a_prompt,0
 ;
 mm_regs  LF
-         .byte "  PB  PC   nvmxdizc  .C   .X   .Y   SP   DP  DB"
+         .byte "  P  PC   nvmxdizc .C .X .Y  SP   DP  D"
          LF
          .byte "; ",0
 mm_regs2
