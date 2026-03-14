@@ -840,6 +840,7 @@ srinit   =%00000000            ;SR initialization value
 	; input buffer at start of direct page so can be filled
 	; from outside code
 ndump	 .dsb s_byte
+ncnt	 .dsb s_byte
 nmbytes	 .dsb s_word
 ibufidx  .dsb s_byte		
 ibuffer  .dsb s_ibuf+s_byte
@@ -2664,7 +2665,8 @@ dpymemprfix:
 ;	-----------------------------------------------------------------------
 ;
 dpymem   ldy ndump           ;bytes per line
-dpymemn  rep #m_seta		; number of bytes in y
+dpymemn sty ncnt 
+	rep #m_seta		; number of bytes in y
          stz charcnt           ;reset
 	 sep #m_setr
 	.as
@@ -2695,13 +2697,20 @@ dpymemn  rep #m_seta		; number of bytes in y
          bne @0000010          ;not done
 ;
          stz ibuffer,x         ;terminate ASCII string
+
+	lda ncnt
+	cmp #7
+	bcc @0000031
+	lda ndump
+	cmp #9
+	bcc @0000031
 	 jsr printspc		; separate hex output from ascii for better parsing
          lda #memsepch
          jsr putcha            ;separate ASCII from bytes
          pea dc_bf
          jsr sprint            ;select reverse video
          jsr dpyibuf           ;display ASCII equivalents
-         pea dc_sf            ;normal video
+@0000031 pea dc_sf            ;normal video
          bra dpyerraa
 ;
 ;===============================================================================
