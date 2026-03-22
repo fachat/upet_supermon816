@@ -257,6 +257,15 @@ xit	sei
 	stx bankreg
 	rts
 
+	;------------------------
+	; fixed code entry point for DOS wedge...
+	.dsb $d534-*
+	lda #$0d
+	jmp $f266
+
+	;------------------------
+	; continue with mon companion
+
 lfemu   lda #0
         sta $cd         ; disable quote mode
         lda #$11        ; crsr down
